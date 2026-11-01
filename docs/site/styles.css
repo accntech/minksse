@@ -393,3 +393,16 @@ dialog::backdrop { background: #00000099; -webkit-backdrop-filter: blur(6px); ba
 @media print {
   .primary-nav { display: none; }
 }
+
+.framework-tabs { display: flex; gap: 8px; border-bottom: 1px solid var(--line); margin: 24px 0 20px; }
+.framework-tabs button { min-height: 44px; padding: 8px 16px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font-size: 14px; }
+.framework-tabs button:hover { color: var(--ink); background: var(--surface); }
+.framework-tabs button[aria-selected='true'] { color: var(--brand); border-bottom-color: var(--brand); font-weight: 600; }
+.framework-tabs button:focus-visible { outline-offset: -4px; }
+.framework-panel { scroll-margin-top: 88px; }
+.framework-panel:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+.tabs-ready .framework-panel>h3 { display: none; }
+@media print {
+  .framework-tabs { display: none; }
+  .tabs-ready .framework-panel[hidden], .tabs-ready .framework-panel>h3 { display: block !important; }
+}

@@ -164,3 +164,49 @@ if ('IntersectionObserver' in window) {
   }, { rootMargin: '-15% 0px -65% 0px' });
   document.querySelectorAll('main section[id]').forEach(section => observer.observe(section));
 }
+
+// Keep every example readable until the tab interaction is ready.
+document.querySelectorAll('[data-framework-tabs]').forEach(group => {
+  const tablist = group.querySelector('.framework-tabs');
+  const tabs = [...tablist.querySelectorAll('button')];
+  const panels = tabs.map(tab => document.getElementById(tab.getAttribute('aria-controls')));
+  function activate(index, focus = false) {
+    tabs.forEach((tab, position) => {
+      const selected = position === index;
+      tab.setAttribute('aria-selected', String(selected));
+      tab.tabIndex = selected ? 0 : -1;
+      panels[position].hidden = !selected;
+    });
+    if (focus) tabs[index].focus();
+  }
+  tablist.setAttribute('role', 'tablist');
+  tabs.forEach((tab, index) => {
+    tab.setAttribute('role', 'tab');
+    panels[index].setAttribute('role', 'tabpanel');
+    panels[index].tabIndex = 0;
+    panels[index].setAttribute('aria-labelledby', tab.id);
+    tab.addEventListener('click', () => activate(index));
+    tab.addEventListener('keydown', event => {
+      const next = {
+        ArrowRight: (index + 1) % tabs.length,
+        ArrowLeft: (index + tabs.length - 1) % tabs.length,
+        Home: 0,
+        End: tabs.length - 1
+      }[event.key];
+      if (next === undefined) return;
+      event.preventDefault();
+      activate(next, true);
+    });
+  });
+  function revealFragment() {
+    const index = panels.findIndex(panel => `#${panel.id}` === location.hash);
+    if (index < 0) return;
+    activate(index);
+    panels[index].scrollIntoView();
+  }
+  activate(0);
+  group.classList.add('tabs-ready');
+  tablist.hidden = false;
+  revealFragment();
+  window.addEventListener('hashchange', revealFragment);
+});

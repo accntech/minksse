@@ -16,6 +16,8 @@ export const code = (text, language = 'JavaScript') => `<div class="code-block">
 const note = (title, text) => `<aside class="note">${icon("document-text")}<div><strong>${title}</strong><p>${text}</p></div></aside>`;
 const table = (headers, rows) => `<div class="table-wrap" tabindex="0" role="region" aria-label="Data table; scroll horizontally if needed"><table role="table"><thead><tr>${headers.map(h => `<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${row.map((cell, i) => `<${i ? 'td' : 'th scope="row"'}>${cell}</${i ? 'td' : 'th'}>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 const section = (id, title, body) => `<section id="${id}"><h2>${title}<a class="anchor" href="#${id}" aria-label="Link to ${title}">#</a></h2>${body}</section>`;
+const frameworkPanel = (id, title, body) => `<div id="${id}" class="framework-panel"><h3>${title}</h3>${body}</div>`;
+const frameworkTabs = body => `<div data-framework-tabs><div class="framework-tabs" aria-label="Framework examples" hidden>${['React', 'Vue', 'Svelte'].map(name => `<button type="button" id="tab-${name.toLowerCase()}" aria-controls="${name.toLowerCase()}">${name}</button>`).join('')}</div>${body}</div>`;
 const signature = text => `<code>${escape(text)}</code>`;
 const apiTable = rows => table(['Member', 'Behavior'], rows.map(([member, behavior]) => [signature(member), behavior])).replace('class="table-wrap"', 'class="table-wrap api-table"');
 
@@ -47,6 +49,102 @@ function dispose() {
   unsubscribe();
   connection.close();
 }`;
+  const reactExample = `import { useEffect, useState } from 'react';
+import { createSseConnection } from 'minksse/client';
+
+export default function Tick() {
+  const [time, setTime] = useState(null);
+  const [status, setStatus] = useState('Connecting…');
+
+  useEffect(() => {
+    const connection = createSseConnection('/events', {
+      onopen: () => setStatus('Waiting for events…'),
+      onerror: (error) => {
+        console.error(error);
+        setStatus('Event or connection error. See console.');
+      },
+      onclose: () => setStatus('Stream ended. Reload to reconnect.')
+    });
+    connection.subscribe('tick', (value) => {
+      if (value === null || typeof value !== 'object' || !Number.isFinite(value.time)) {
+        throw new Error('Expected a tick with a finite time');
+      }
+      setTime(value.time);
+      setStatus('Receiving events.');
+    });
+    return () => connection.close();
+  }, []);
+
+  return (
+    <>
+      <p role="status">{status}</p>
+      <p>Latest tick: {time ?? 'None yet'}</p>
+    </>
+  );
+}`;
+  const vueExample = `<script setup>
+import { ref, onMounted, onUnmounted } from 'vue';
+import { createSseConnection } from 'minksse/client';
+
+const time = ref(null);
+const status = ref('Connecting…');
+let connection;
+
+onMounted(() => {
+  connection = createSseConnection('/events', {
+    onopen: () => { status.value = 'Waiting for events…'; },
+    onerror: (error) => {
+      console.error(error);
+      status.value = 'Event or connection error. See console.';
+    },
+    onclose: () => { status.value = 'Stream ended. Reload to reconnect.'; }
+  });
+  connection.subscribe('tick', (value) => {
+    if (value === null || typeof value !== 'object' || !Number.isFinite(value.time)) {
+      throw new Error('Expected a tick with a finite time');
+    }
+    time.value = value.time;
+    status.value = 'Receiving events.';
+  });
+});
+
+onUnmounted(() => connection?.close());
+</script>
+
+<template>
+  <p role="status">{{ status }}</p>
+  <p>Latest tick: {{ time ?? 'None yet' }}</p>
+</template>`;
+  const svelteExample = `<script>
+  import { onMount } from 'svelte';
+  import { createSseConnection } from 'minksse/client';
+
+  let time = $state(null);
+  let status = $state('Connecting…');
+
+  onMount(() => {
+    const connection = createSseConnection('/events', {
+      onopen: () => { status = 'Waiting for events…'; },
+      onerror: (error) => {
+        console.error(error);
+        status = 'Event or connection error. See console.';
+      },
+      onclose: () => { status = 'Stream ended. Reload to reconnect.'; }
+    });
+    connection.subscribe('tick', (value) => {
+      if (value === null || typeof value !== 'object' || !Number.isFinite(value.time)) {
+        throw new Error('Expected a tick with a finite time');
+      }
+      time = value.time;
+      status = 'Receiving events.';
+    });
+    return () => connection.close();
+  });
+</script>
+
+<p role="status">{status}</p>
+<p>Latest tick: {time ?? 'None yet'}</p>`;
+  const exampleContract = `<p>These JavaScript components connect to <code>POST /events</code> on your application’s origin and display the <code>{ time: number }</code> ticks from <a href="getting-started/#create-an-endpoint">the example endpoint</a>. Serve or proxy that route from your app; a frontend dev server alone does not provide it.</p><p>JSON decoding does not validate an event’s shape. Each listener checks for a finite numeric <code>time</code> before changing the display. The client forwards thrown listener errors to <code>onerror</code>; a later valid event can still arrive. The last valid tick stays visible if an error occurs or the stream ends.</p><p>These examples show connection status but do not retry. When the stream ends, reload the page to reconnect, or add the retry policy from <a href="lifecycle/">Reconnection and cleanup</a>. Calling <code>close()</code> releases all subscriptions and suppresses <code>onclose</code> during local cleanup.</p>`;
   return [
     { slug: 'index', label: 'Overview', title: 'Server-sent events.\nWithout the framework.', category: 'Introduction', description: 'A small, dependency-free SSE toolkit built on the Web APIs you already use. Produce events on the server. Subscribe to them anywhere.', body: `
       <div class="hero-actions"><a class="button primary" href="getting-started/">Get started ${icon('arrow-right')}</a><a class="text-link" href="server/">Explore the API ${icon('arrow-right')}</a></div>
@@ -72,7 +170,11 @@ bun run build
 # From your application directory:
 npm install /path/to/minksse`, 'Terminal')) +
       section('create-an-endpoint', 'Create an endpoint', `<p>Expose a <code>POST /events</code> route. The example below uses SvelteKit's handler shape; in another server, pass the incoming request signal and return the same Response.</p>` + code(producer)) +
-      section('subscribe-to-events', 'Subscribe to events', `<p>Create the connection in the browser. Register listeners immediately; the first request starts in a microtask. Application payloads are decoded from JSON.</p>` + code(client)) +
+      section('subscribe-to-events', 'Subscribe to events', `<p>Choose the React, Vue, or Svelte example below to display ticks from the endpoint above. Each component owns its connection and closes it on unmount. The equivalent plain JavaScript setup is:</p><p>Create the connection in the browser. Register listeners immediately; the first request starts in a microtask. Application payloads are decoded from JSON.</p>` + code(client)) +
+      section('framework-examples', 'Choose your framework', exampleContract + frameworkTabs(
+      frameworkPanel('react', 'React', `<p>Save this as <code>Tick.jsx</code> in your React application. For Next.js App Router, add <code>'use client';</code> at the top of the file. The effect opens the stream after mounting and closes it during cleanup.</p>` + code(reactExample, 'JavaScript (React JSX)')) +
+      frameworkPanel('vue', 'Vue', `<p>Save this as <code>Tick.vue</code> in a Vue 3 application. Open the stream after mounting and close it when the component unmounts.</p>` + code(vueExample, 'Vue')) +
+      frameworkPanel('svelte', 'Svelte', `<p>Save this as <code>Tick.svelte</code> in a Svelte 5 application. The synchronous <code>onMount</code> callback opens the stream in the browser and returns its cleanup function.</p>` + code(svelteExample, 'Svelte')))) +
       section('own-the-connection', 'Own the connection', `<p>Keep one connection for each explicit owner. Removing a listener only removes that registration. Call <code>close()</code> when the component, view, or application is disposed.</p><p>For automatic recovery, provide an <code>onclose</code> callback and own the retry timer too. See <a href="lifecycle/">Reconnection and cleanup</a>.</p>`) },
     { slug: 'server', label: 'Producer', title: 'produce', category: 'API reference', description: 'Create an SSE response with bounded buffering, heartbeats, and explicit cleanup.', body:
       section('signature', 'Signature', code(`import { produce, SSE_MAX_BUFFER_BYTES } from 'minksse/server';
@@ -136,39 +238,10 @@ function dispose() {
       section('errors', 'Errors', `<p>Invalid options throw synchronously. Transport and payload errors go to <code>onerror</code>. Nonlocal stream termination offers <code>connect()</code> through <code>onclose</code>. Permanent local closure suppresses recovery callbacks.</p><p>The client API does not expose response status metadata to the recovery callback. If you need authentication-aware retry decisions, provide application policy around a custom fetch implementation or a separate session check.</p>`) +
       section('server-resources', 'Server resources', `<p>Return a finalizer for intervals, pub/sub registrations, and other resources allocated inside setup. Use <code>onStop</code> for resources owned before setup. Always forward the request's abort signal.</p>`) },
     { slug: 'frameworks', label: 'Framework integration', title: 'Bring your framework', category: 'Guides', description: 'Keep the transport independent and bind its lifetime to your component.', body:
-      section('react', 'React', `<p>Create the connection inside an effect and close it in the effect cleanup. This also gives development remounts an explicit cleanup path.</p>` + code(`import { useEffect, useState } from 'react';
-import { createSseConnection } from 'minksse/client';
-
-export function useTick() {
-  const [tick, setTick] = useState(null);
-  useEffect(() => {
-    const connection = createSseConnection('/events');
-    connection.subscribe('tick', setTick);
-    return () => connection.close();
-  }, []);
-  return tick;
-}`) + `<p><a href="https://react.dev/reference/react/useEffect">React effect lifecycle</a></p>`) +
-      section('vue', 'Vue', `<p>Create the stream after mounting and close it before unmounting. Keep browser connections outside server rendering.</p>` + code(`import { ref, onMounted, onUnmounted } from 'vue';
-import { createSseConnection } from 'minksse/client';
-
-export function useTick() {
-  const tick = ref(null);
-  let connection;
-  onMounted(() => {
-    connection = createSseConnection('/events');
-    connection.subscribe('tick', (value) => { tick.value = value; });
-  });
-  onUnmounted(() => connection?.close());
-  return tick;
-}`) + `<p><a href="https://vuejs.org/api/composition-api-lifecycle.html">Vue lifecycle hooks</a></p>`) +
-      section('svelte', 'Svelte', `<p>Start the connection in a synchronous mount callback and return its cleanup function.</p>` + code(`import { onMount } from 'svelte';
-import { createSseConnection } from 'minksse/client';
-
-onMount(() => {
-  const connection = createSseConnection('/events');
-  connection.subscribe('tick', (value) => console.log(value));
-  return () => connection.close();
-});`) + `<p><a href="https://svelte.dev/docs/svelte/lifecycle-hooks">Svelte lifecycle hooks</a></p>`) +
+      section('example-contract', 'Before you connect', exampleContract) +
+      section('react', 'React', `<p>Save this as <code>Tick.jsx</code>. For Next.js App Router, add <code>'use client';</code> at the top. Create the connection inside <code>useEffect</code> and close it in the cleanup. React Strict Mode runs an extra setup/cleanup cycle in development; each setup must create a fresh connection. Effects do not run during server rendering.</p>` + code(reactExample, 'JavaScript (React JSX)') + `<p><a href="https://react.dev/reference/react/useEffect">React effect lifecycle</a></p>`) +
+      section('vue', 'Vue', `<p>Save this as <code>Tick.vue</code> in a Vue 3 application. Register both lifecycle hooks synchronously in <code>setup</code>. <code>onMounted</code> starts the stream only in the browser, and <code>onUnmounted</code> closes it. The connection is a plain local variable because it does not drive the template; only the displayed values need refs.</p>` + code(vueExample, 'Vue') + `<p><a href="https://vuejs.org/api/composition-api-lifecycle.html">Vue lifecycle hooks</a></p>`) +
+      section('svelte', 'Svelte', `<p>Save this as <code>Tick.svelte</code> in a Svelte 5 application. <code>onMount</code> does not run during server rendering. Keep its callback synchronous so Svelte receives the returned cleanup function; an async callback would return a promise instead. The displayed values use <code>$state</code>.</p>` + code(svelteExample, 'Svelte') + `<p><a href="https://svelte.dev/docs/svelte/lifecycle-hooks">Svelte lifecycle hooks</a></p>`) +
       section('servers', 'Servers', `<p>A SvelteKit <code>+server.ts</code> POST handler can return the producer Response directly. Other servers need to accept or adapt a streaming Web Response. MinkSSE does not include a Node HTTP response adapter.</p>` + code(producer) + `<p><a href="https://svelte.dev/docs/kit/routing#server">SvelteKit streaming endpoints</a></p>`) },
     { slug: 'deployment', label: 'Deployment', title: 'Keep the stream flowing', category: 'Guides', description: 'Verify streaming behavior across your server, reverse proxy, and browser.', body:
       section('streaming', 'Streaming support', `<p>Deploy to a runtime that supports long-lived streaming responses. Some platforms buffer response bodies or impose request-duration limits. Verify your deployed endpoint with a real client; a successful local stream does not establish production streaming support.</p>`) +

@@ -77,8 +77,8 @@ test('the published parser example executes against the real API', async () => {
 test('the quick-start client connects before explicit disposal', async () => {
   const { pages } = await import(new URL('../docs/site/content.mjs', import.meta.url).href);
   const page = pages({ types: '' }).find((item) => item.slug === 'getting-started');
-  const blocks = [...page.body.matchAll(/<pre[^>]*><code>([\s\S]*?)<\/code><\/pre>/g)];
-  const source = blocks[blocks.length - 1][1].replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+  const clientSection = page.body.match(/<section id="subscribe-to-events">([\s\S]*?)<\/section>/)[1];
+  const source = clientSection.match(/<pre[^>]*><code>([\s\S]*?)<\/code><\/pre>/)[1].replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
   const { spawnSync } = await import('node:child_process');
   const fixture = `
     import assert from 'node:assert/strict';
@@ -96,4 +96,30 @@ test('the quick-start client connects before explicit disposal', async () => {
   const result = spawnSync('node', ['--input-type=module', '--eval', fixture], { cwd: new URL('../', import.meta.url), encoding: 'utf8' });
   expect({ status: result.status, stderr: result.stderr }).toEqual({ status: 0, stderr: '' });
   expect(result.stdout).toContain('123');
+});
+
+test('getting started groups framework examples with linked tab controls', async () => {
+  const { pages } = await import(new URL('../docs/site/content.mjs', import.meta.url).href);
+  const page = pages({ types: '' }).find(item => item.slug === 'getting-started');
+  expect(page.body).toContain('data-framework-tabs');
+  for (const framework of ['react', 'vue', 'svelte']) {
+    expect(page.body).toContain(`id="tab-${framework}" aria-controls="${framework}"`);
+    expect(page.body).toContain(`<div id="${framework}" class="framework-panel"`);
+    expect(page.body).not.toContain(`<section id="${framework}">`);
+  }
+});
+
+test('getting started and framework integration publish the same complete components', async () => {
+  const { pages } = await import(new URL('../docs/site/content.mjs', import.meta.url).href);
+  const documents = pages({ types: '' });
+  const start = documents.find(page => page.slug === 'getting-started');
+  const guide = documents.find(page => page.slug === 'frameworks');
+  const decode = html => html.replace(/<[^>]*>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+  for (const name of ['react', 'vue', 'svelte']) {
+    const example = page => {
+      const fragment = page.body.slice(page.body.indexOf(`id="${name}"`));
+      return decode(fragment.match(/<pre[^>]*><code>([\s\S]*?)<\/code><\/pre>/)[1]);
+    };
+    expect(example(start)).toBe(example(guide));
+  }
 });
