@@ -1,4 +1,3 @@
-// Packaging structure adapted from MinkExcel. Copyright (c) 2026 MinkExcel contributors.
 // MIT licensed; see LICENSE. Emit separate JavaScript modules to preserve tree shaking.
 import { readFile, rm } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
