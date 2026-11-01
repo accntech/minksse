@@ -25,7 +25,7 @@ test('documentation builds navigable pages with valid local links and fragments'
   expect(files.length).toBeGreaterThanOrEqual(8);
   for (const file of files) {
     const html = await readFile(file, 'utf8');
-    expect(html).toContain('Minksse');
+    expect(html).toContain('MinkSSE');
     expect(html).not.toMatch(/minkexcel|@grabm\/sse|workbook|exceljs/i);
     for (const match of html.matchAll(/(?:href|src)="([^"]+)"/g)) {
       if (/^[a-z]+:|^\/\//i.test(match[1])) continue;
@@ -37,6 +37,20 @@ test('documentation builds navigable pages with valid local links and fragments'
     }
   }
 });
+test('primary navigation selects the current documentation section', async () => {
+  for (const [slug, selected] of [
+    ['index', 'Docs'], ['getting-started', 'Get started'],
+    ['server', 'Reference'], ['client', 'Reference'], ['parser', 'Reference'],
+    ['types', 'Reference'], ['lifecycle', 'Docs'], ['frameworks', 'Docs'],
+    ['deployment', 'Docs'], ['faq', 'Docs']
+  ]) {
+    const html = await readFile(resolve(output, slug === 'index' ? 'index.html' : `${slug}/index.html`), 'utf8');
+    const nav = html.match(/<nav class="primary-nav"[^>]*>([\s\S]*?)<\/nav>/)[1];
+    const active = [...nav.matchAll(/<a\b[^>]*aria-current="page"[^>]*>([^<]+)<\/a>/g)];
+    expect(active.map(match => match[1])).toEqual([selected]);
+  }
+});
+
 test('search points to built pages and source-derived API declarations ship with docs', async () => {
   const search = await Bun.file(resolve(output, 'search.json')).json();
   expect(search.some((item) => item.title.includes('Reconnection'))).toBe(true);

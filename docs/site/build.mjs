@@ -2,7 +2,7 @@ import { readFile, writeFile, mkdir, copyFile, rm, cp } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { pages, escape } from './content.mjs';
-import { icon } from './icons.mjs';
+import { icon, githubMark, robotMark } from './icons.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const output = join(root, 'build/docs');
@@ -27,14 +27,14 @@ for (const [index, page] of documents.entries()) {
   const headings = [...page.body.matchAll(/<section id="([^"]+)"><h2>([^<]+)/g)]
     .map(match => ({ id: match[1], title: match[2] }));
   const nav = ['Introduction', 'API reference', 'Guides'].map(group => `
-    <div class="nav-group"><p>${group}</p>
+    <div class="nav-group"><p>${icon({ Introduction: 'book', 'API reference': 'code-square', Guides: 'book-bookmark' }[group])}<span>${group}</span></p>
       ${documents.filter(doc => doc.category === group).map(doc => `
         <a href="${pageHref(doc.slug)}" ${doc.slug === page.slug ? 'aria-current="page"' : ''}>
           <span>${doc.label}</span>
         </a>`).join('')}
     </div>`).join('') + `
-    <div class="nav-group"><p>Resources</p>
-      <a href="llms.txt" type="text/plain"><span>llms.txt</span></a>
+    <div class="nav-group"><p>${robotMark}<span>For AI agents</span></p>
+      <a href="llms.txt" type="text/plain"><span>Documentation index</span></a>
       <a href="llms-full.txt" type="text/plain"><span>Complete documentation</span></a>
     </div>`;
   const sectionLinks = headings.map(h => `<a href="#${h.id}">${h.title}</a>`).join('');
@@ -42,14 +42,17 @@ for (const [index, page] of documents.entries()) {
   search.push({ title: page.label, href: pageHref(page.slug), text: plain });
   for (const heading of headings) search.push({ title: `${heading.title} · ${page.label}`, href: `${pageHref(page.slug)}#${heading.id}`, text: heading.title });
   const previous = documents[index - 1], next = documents[index + 1];
+  const primarySection = page.slug === 'getting-started' ? 'getting-started' : page.category === 'API reference' ? 'server' : 'index';
+  const primaryNav = [['index', 'Docs'], ['getting-started', 'Get started'], ['server', 'Reference']]
+    .map(([slug, label]) => `<a href="${pageHref(slug)}"${slug === primarySection ? ' aria-current="page"' : ''}>${label}</a>`).join('');
   const html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark"><meta name="description" content="${escape(page.description)}">
-  <meta property="og:title" content="${escape(page.label)} — Minksse">
+  <meta property="og:title" content="${escape(page.label)} — MinkSSE">
   <meta property="og:description" content="${escape(page.description)}"><meta property="og:type" content="website">
-  <title>${escape(page.label)} — Minksse documentation</title>
+  <title>${escape(page.label)} — MinkSSE documentation</title>
   <link rel="describedby" href="llms.txt" type="text/plain">
   <script>if (location.pathname.endsWith('/index.html')) location.replace('./' + location.search + location.hash);
 ${boot}</script>
@@ -61,8 +64,8 @@ ${boot}</script>
 <body class="page-${page.slug}">
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="topbar">
-    <a class="brand" href="./"><img src="icon.png" width="36" height="36" alt=""><span class="brand-copy"><span class="brand-name"><strong>Mink</strong>sse</span><span class="brand-subtitle">Server-sent events</span></span></a>
-    <nav class="primary-nav" aria-label="Primary"><a href="./" aria-current="page">Docs</a><a href="getting-started/">Get started</a><a href="server/">Reference</a></nav>
+    <a class="brand" href="./"><img src="icon.png" width="36" height="36" alt=""><span class="brand-copy"><span class="brand-name"><strong>Mink</strong>SSE</span><span class="brand-subtitle">Server-sent events</span></span></a>
+    <nav class="primary-nav" aria-label="Primary">${primaryNav}</nav>
     <div class="top-actions">
       <button class="search-trigger" type="button" aria-label="Open documentation search" aria-haspopup="dialog" aria-controls="search-dialog" aria-keyshortcuts="Meta+K Control+K" hidden>
         ${icon('magnifier')}<span>Search documentation…</span><kbd aria-hidden="true"><span class="shortcut-modifier"><span class="shortcut-mac">⌘</span><span class="shortcut-control">Ctrl</span></span><span>K</span></kbd>
@@ -71,6 +74,7 @@ ${boot}</script>
       <button class="icon-button theme-toggle" type="button" aria-label="Switch to dark theme" hidden>
         ${icon('moon', 'moon-icon')}${icon('sun', 'sun-icon')}
       </button>
+      <a class="icon-button" href="https://github.com/accntech/minksse" aria-label="MinkSSE on GitHub" title="MinkSSE on GitHub">${githubMark}</a>
       <div class="header-navigation">
         <button class="icon-button menu-toggle" aria-label="Open navigation" aria-controls="mobile-navigation" aria-expanded="false" type="button" hidden>${icon('hamburger-menu')}</button>
         <details class="fallback-navigation"><summary aria-label="Documentation navigation">${icon('hamburger-menu')}</summary><nav aria-label="Documentation">${nav}</nav></details>
@@ -92,7 +96,7 @@ ${boot}</script>
         ${next ? `<a href="${pageHref(next.slug)}"><span>Next ${icon('arrow-right')}</span><strong>${next.label}</strong></a>` : '<div></div>'}
       </nav>
       <footer class="footer">
-        <div><span>Minksse · MIT License</span><a href="https://www.figma.com/community/file/1166831539721848736">Solar icons by 480 Design</a></div>
+        <div><span>MinkSSE · MIT License</span><a href="https://www.figma.com/community/file/1166831539721848736">Solar icons by 480 Design</a></div>
         <a href="llms.txt">llms.txt ${icon('arrow-right-up')}</a>
       </footer>
     </main>
@@ -122,6 +126,6 @@ ${boot}</script>
   await writeFile(join(directory, 'index.html'), rendered);
 }
 await writeFile(join(output, 'search.json'), JSON.stringify(search));
-await writeFile(join(output, 'llms.txt'), `# Minksse\n\nFramework-independent server-sent events. Zero runtime dependencies.\n\n${documents.map(page => `- [${page.label}](${pageHref(page.slug)}): ${page.description}`).join('\n')}\n`);
+await writeFile(join(output, 'llms.txt'), `# MinkSSE\n\nFramework-independent server-sent events. Zero runtime dependencies.\n\n${documents.map(page => `- [${page.label}](${pageHref(page.slug)}): ${page.description}`).join('\n')}\n`);
 await writeFile(join(output, 'llms-full.txt'), documents.map(page => `# ${page.label}\n\n${page.description}\n\n${page.body.replace(/<[^>]+>/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')}`).join('\n\n'));
 console.log(`Built ${documents.length} documentation pages → build/docs`);

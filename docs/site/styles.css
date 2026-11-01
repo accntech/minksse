@@ -225,7 +225,8 @@ dialog::backdrop { background: #00000099; -webkit-backdrop-filter: blur(6px); ba
 .dialog-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
 .dialog-heading strong { font-weight: 500; font-size: 16px; }
 .nav-group { margin-bottom: 26px; }
-.nav-group>p { margin: 0 0 8px; font-size: 13px; font-weight: 500; }
+.nav-group>p { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 13px; font-weight: 500; }
+.nav-group>p .icon { width: 18px; height: 18px; flex-basis: 18px; }
 .nav-group>a { display: flex; align-items: center; gap: 10px; padding: 8px 0; min-height: 44px; font-size: 14px; color: var(--muted); }
 .nav-group>a .icon { width: 18px; height: 18px; flex-basis: 18px; }
 .nav-group>a:hover { color: var(--ink); text-decoration: none; }
@@ -331,7 +332,7 @@ dialog::backdrop { background: #00000099; -webkit-backdrop-filter: blur(6px); ba
   a { color: inherit; }
 }
 
-/* Minksse: a quiet documentation shell with a signal-orange identity. */
+/* MinkSSE: a quiet documentation shell with a signal-orange identity. */
 .primary-nav { display: none; align-self: stretch; align-items: stretch; gap: 24px; }
 .primary-nav a { display: inline-flex; align-items: center; color: var(--muted); font-size: 14px; border-bottom: 2px solid transparent; padding-top: 2px; }
 .primary-nav a[aria-current] { color: var(--brand); border-color: var(--brand); }
