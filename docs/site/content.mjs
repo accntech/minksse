@@ -163,12 +163,7 @@ stream.subscribe('notification', (notification) => {
       ${section('where-to-start', 'Where to start', `<div class="guide-links"><a href="getting-started/"><strong>Your first stream ${icon('arrow-right')}</strong><span>Connect a producer to a browser.</span></a><a href="frameworks/"><strong>Use your framework ${icon('arrow-right')}</strong><span>Own connections in React, Vue, and Svelte.</span></a><a href="lifecycle/"><strong>Manage the lifecycle ${icon('arrow-right')}</strong><span>Clean up, retry, and handle errors.</span></a></div>`)}
     ` },
     { slug: 'getting-started', label: 'Getting started', title: 'Your first event stream', category: 'Introduction', description: 'Set up a producer and a client, then give the connection a clear owner.', body:
-      section('before-you-start', 'Before you start', `<p>You need a server that supports streaming <code>Response</code> bodies and a browser with Fetch and Streams support. The package ships JavaScript ESM and TypeScript declarations.</p><p>This checkout has not been published to npm. Build it and install the local directory from your application:</p>` + code(`cd /path/to/minksse
-bun install
-bun run build
-
-# From your application directory:
-npm install /path/to/minksse`, 'Terminal')) +
+      section('before-you-start', 'Before you start', `<p>You need a server that supports streaming <code>Response</code> bodies and a browser with Fetch and Streams support. The package ships JavaScript ESM and TypeScript declarations.</p><p>Install MinkSSE from npm in your application directory:</p>` + code(`npm install minksse`, 'Terminal')) +
       section('create-an-endpoint', 'Create an endpoint', `<p>Expose a <code>POST /events</code> route. The example below uses SvelteKit's handler shape; in another server, pass the incoming request signal and return the same Response.</p>` + code(producer)) +
       section('subscribe-to-events', 'Subscribe to events', `<p>Choose the React, Vue, or Svelte example below to display ticks from the endpoint above. Each component owns its connection and closes it on unmount. The equivalent plain JavaScript setup is:</p><p>Create the connection in the browser. Register listeners immediately; the first request starts in a microtask. Application payloads are decoded from JSON.</p>` + code(client)) +
       section('framework-examples', 'Choose your framework', exampleContract + frameworkTabs(
@@ -265,6 +260,6 @@ function dispose() {
       section('websockets', 'How is SSE different from WebSockets?', `<p>SSE streams events from server to client over HTTP. Client actions can use separate HTTP requests. WebSockets support ongoing communication in both directions over the same connection.</p>`) +
       section('compatibility', 'How are event payloads delivered?', `<p>The bundled client parses subscribed event data as JSON and passes the result to your callback. Serialize server payloads with <code>JSON.stringify()</code> and validate received values before using them. For raw text events, use <code>createSseParser()</code> directly.</p>`) +
       section('reconnection', 'Does the client reconnect automatically?', `<p>No. Use <code>onclose</code> to schedule retries with the supplied <code>connect()</code> function. Subscriptions survive reconnects, but missed events are not replayed automatically. Call <code>close()</code> when the connection’s owner is disposed to stop the stream and release its resources.</p>`) +
-      section('publishing', 'How do I install MinkSSE?', `<p>Build and install it locally from this checkout using the <a href="getting-started/">Getting started</a> instructions. No npm publication or hosted documentation deployment has been performed.</p>`) }
+      section('publishing', 'How do I install MinkSSE?', `<p>Run <code>npm install minksse</code> in your application directory. Follow <a href="getting-started/">Getting started</a> to create an endpoint and subscribe to events.</p>`) }
   ];
 }

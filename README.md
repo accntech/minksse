@@ -2,6 +2,12 @@
 
 # MinkSSE
 
+[![npm version](https://img.shields.io/npm/v/minksse?style=plastic&color=orange)](https://www.npmjs.com/package/minksse)
+[![npm monthly downloads](https://img.shields.io/npm/dm/minksse?style=plastic&label=downloads&color=brightgreen)](https://www.npmjs.com/package/minksse)
+[![Runtime dependencies: 0](https://img.shields.io/badge/runtime_dependencies-0-217346?style=plastic)](#install)
+[![Documentation](https://img.shields.io/badge/docs-MinkSSE-217346?style=plastic)](docs/site/README.md)
+[![GitHub stars](https://img.shields.io/github/stars/accntech/minksse?style=social&label=Stars)](https://github.com/accntech/minksse/stargazers)
+
 Server-Sent Events for JavaScript applications: produce a streaming Web `Response`, subscribe to named events over POST, or parse SSE text directly. Zero runtime dependencies, native JavaScript ESM, and TypeScript declarations generated from JSDoc.
 
 MinkSSE uses Web APIs and works independently of a frontend or server framework. You own each connection, its cleanup, and its retry policy.

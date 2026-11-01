@@ -33,6 +33,9 @@ for (const [index, page] of documents.entries()) {
           <span>${doc.label}</span>
         </a>`).join('')}
     </div>`).join('') + `
+    <div class="nav-group"><p>${icon('code-square')}<span>Package</span></p>
+      <a href="https://www.npmjs.com/package/minksse"><span>MinkSSE on npm</span>${icon('arrow-right-up')}</a>
+    </div>
     <div class="nav-group"><p>${robotMark}<span>For AI agents</span></p>
       <a href="llms.txt" type="text/plain"><span>Documentation index</span></a>
       <a href="llms-full.txt" type="text/plain"><span>Complete documentation</span></a>
