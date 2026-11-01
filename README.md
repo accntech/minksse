@@ -12,7 +12,13 @@ MinkSSE uses Web APIs and works independently of a frontend or server framework.
 | `createSseConnection()` | Open a POST stream and deliver subscribed events as parsed JSON. |
 | `createSseParser()` | Parse incremental SSE text into raw event, data, and ID strings. |
 
-## Install from this checkout
+## Install
+
+```sh
+npm install minksse
+```
+
+### Install from a local checkout
 
 Build the package before installing it into your application:
 
@@ -178,7 +184,7 @@ bun run test:docs      # Documentation checks
 bun run bench          # Parser and producer timing benchmarks
 ```
 
-Read the [documentation site instructions](docs/site/README.md) for preview details. The site includes framework lifecycle examples and the generated API declarations.
+Read the [documentation site instructions](https://github.com/accntech/minksse/blob/main/docs/site/README.md) for preview details. The site includes framework lifecycle examples and the generated API declarations.
 
 Source and executable tests are JavaScript. TypeScript is a development tool for checking JSDoc and generating declarations; `tests/types-consumer.js` verifies the types exposed to consumers. No TypeScript loader is needed at runtime.
 
