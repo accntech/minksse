@@ -1,0 +1,50 @@
+{
+  "name": "minksse",
+  "version": "0.1.0",
+  "description": "Dependency-free Server-Sent Events transport with an explicitly owned POST client, streaming parser, and Web Response producer.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    },
+    "./parser": {
+      "types": "./dist/parser.d.ts",
+      "import": "./dist/parser.js"
+    }
+  },
+  "files": [
+    "dist",
+    "assets/icon.png"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/build.mjs && tsc --noEmit",
+    "bench": "bun run build && node scripts/benchmark.mjs",
+    "prepack": "npm run build",
+    "test": "bun run docs:build && bun test ./tests/",
+    "test:transport": "bun run build && bun test tests/client.test.js tests/server.test.js tests/producer-demand.test.js tests/resources.test.js tests/standalone.test.js tests/package.test.js",
+    "docs:build": "bun run build && node docs/site/build.mjs",
+    "docs:preview": "node docs/site/serve.mjs",
+    "test:docs": "bun run docs:build && bun test tests/docs.test.js"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4",
+    "typescript": "^7.0.2"
+  }
+}

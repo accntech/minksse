@@ -1,0 +1,127 @@
+import { readFile, writeFile, mkdir, copyFile, rm, cp } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+import { pages, escape } from './content.mjs';
+import { icon } from './icons.mjs';
+
+const root = fileURLToPath(new URL('../../', import.meta.url));
+const output = join(root, 'build/docs');
+const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
+const boot = await readFile(join(root, 'docs/site/boot.js'), 'utf8');
+const declarations = await Promise.all(['index', 'server', 'client', 'parser'].map(async name => ({
+  name, text: await readFile(join(root, `dist/${name}.d.ts`), 'utf8')
+})));
+const documents = pages({ types: declarations.filter(item => item.name !== 'index').map(item => item.text).join('\n\n') });
+await rm(output, { recursive: true, force: true });
+await mkdir(join(output, 'types'), { recursive: true });
+await Promise.all([
+  ...['styles.css', 'app.js'].map(name => copyFile(join(root, 'docs/site', name), join(output, name))),
+  cp(join(root, 'docs/site/assets'), join(output, 'assets'), { recursive: true }),
+  copyFile(join(root, 'assets/icon.png'), join(output, 'icon.png')),
+  ...declarations.map(item => writeFile(join(output, `types/${item.name}.d.ts`), item.text)),
+  writeFile(join(output, '.nojekyll'), '')
+]);
+const pageHref = slug => slug === 'index' ? './' : `${slug}/`;
+const search = [];
+for (const [index, page] of documents.entries()) {
+  const headings = [...page.body.matchAll(/<section id="([^"]+)"><h2>([^<]+)/g)]
+    .map(match => ({ id: match[1], title: match[2] }));
+  const nav = ['Introduction', 'API reference', 'Guides'].map(group => `
+    <div class="nav-group"><p>${group}</p>
+      ${documents.filter(doc => doc.category === group).map(doc => `
+        <a href="${pageHref(doc.slug)}" ${doc.slug === page.slug ? 'aria-current="page"' : ''}>
+          <span>${doc.label}</span>
+        </a>`).join('')}
+    </div>`).join('') + `
+    <div class="nav-group"><p>Resources</p>
+      <a href="llms.txt" type="text/plain"><span>llms.txt</span></a>
+      <a href="llms-full.txt" type="text/plain"><span>Complete documentation</span></a>
+    </div>`;
+  const sectionLinks = headings.map(h => `<a href="#${h.id}">${h.title}</a>`).join('');
+  const plain = page.body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  search.push({ title: page.label, href: pageHref(page.slug), text: plain });
+  for (const heading of headings) search.push({ title: `${heading.title} · ${page.label}`, href: `${pageHref(page.slug)}#${heading.id}`, text: heading.title });
+  const previous = documents[index - 1], next = documents[index + 1];
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark"><meta name="description" content="${escape(page.description)}">
+  <meta property="og:title" content="${escape(page.label)} — Minksse">
+  <meta property="og:description" content="${escape(page.description)}"><meta property="og:type" content="website">
+  <title>${escape(page.label)} — Minksse documentation</title>
+  <link rel="describedby" href="llms.txt" type="text/plain">
+  <script>if (location.pathname.endsWith('/index.html')) location.replace('./' + location.search + location.hash);
+${boot}</script>
+  <link rel="icon" href="icon.png">
+  <link rel="preload" href="assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css"><script type="module" src="app.js"></script>
+</head>
+<body class="page-${page.slug}">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="topbar">
+    <a class="brand" href="./"><img src="icon.png" width="36" height="36" alt=""><span class="brand-copy"><span class="brand-name"><strong>Mink</strong>sse</span><span class="brand-subtitle">Server-sent events</span></span></a>
+    <nav class="primary-nav" aria-label="Primary"><a href="./" aria-current="page">Docs</a><a href="getting-started/">Get started</a><a href="server/">Reference</a></nav>
+    <div class="top-actions">
+      <button class="search-trigger" type="button" aria-label="Open documentation search" aria-haspopup="dialog" aria-controls="search-dialog" aria-keyshortcuts="Meta+K Control+K" hidden>
+        ${icon('magnifier')}<span>Search documentation…</span><kbd aria-hidden="true"><span class="shortcut-modifier"><span class="shortcut-mac">⌘</span><span class="shortcut-control">Ctrl</span></span><span>K</span></kbd>
+      </button>
+
+      <button class="icon-button theme-toggle" type="button" aria-label="Switch to dark theme" hidden>
+        ${icon('moon', 'moon-icon')}${icon('sun', 'sun-icon')}
+      </button>
+      <div class="header-navigation">
+        <button class="icon-button menu-toggle" aria-label="Open navigation" aria-controls="mobile-navigation" aria-expanded="false" type="button" hidden>${icon('hamburger-menu')}</button>
+        <details class="fallback-navigation"><summary aria-label="Documentation navigation">${icon('hamburger-menu')}</summary><nav aria-label="Documentation">${nav}</nav></details>
+      </div>
+    </div>
+  </header>
+  <div class="layout">
+    <aside class="sidebar" id="navigation">
+      <div class="sidebar-heading"><span>Documentation</span><span class="sidebar-version">v${escape(manifest.version)}</span></div>
+      <nav aria-label="Documentation">${nav}</nav>
+    </aside>
+    <main id="main">
+      <nav class="breadcrumb" aria-label="Breadcrumb"><a href="./">Documentation</a>${icon('alt-arrow-right')}<span>${page.label}</span></nav>
+      <details class="mobile-toc"><summary>On this page ${icon('alt-arrow-down')}</summary><nav aria-label="Page sections">${sectionLinks}</nav></details>
+      <div class="page-intro"><p class="eyebrow">MINKSSE <span aria-hidden="true">/</span> ${page.category}</p><h1>${escape(page.title)}</h1><p class="lead">${escape(page.description)}</p></div>
+      ${page.body}
+      <nav class="page-pagination" aria-label="Adjacent pages">
+        ${previous ? `<a href="${pageHref(previous.slug)}"><span>${icon('arrow-left')} Previous</span><strong>${previous.label}</strong></a>` : '<div></div>'}
+        ${next ? `<a href="${pageHref(next.slug)}"><span>Next ${icon('arrow-right')}</span><strong>${next.label}</strong></a>` : '<div></div>'}
+      </nav>
+      <footer class="footer">
+        <div><span>Minksse · MIT License</span><a href="https://www.figma.com/community/file/1166831539721848736">Solar icons by 480 Design</a></div>
+        <a href="llms.txt">llms.txt ${icon('arrow-right-up')}</a>
+      </footer>
+    </main>
+    <aside class="toc"><p>On this page</p><nav aria-label="On this page">${sectionLinks}</nav>
+      <a class="edit-link" href="types/index.d.ts">${icon('document-text')} Public types</a>
+    </aside>
+  </div>
+  <dialog id="mobile-navigation" class="nav-dialog" aria-labelledby="navigation-title">
+    <div class="dialog-heading"><strong id="navigation-title">Documentation</strong><button type="button" class="icon-button close-navigation" aria-label="Close navigation">${icon('close-square')}</button></div>
+    <nav aria-label="Documentation">${nav}</nav>
+    <a class="drawer-github" href="llms.txt">Documentation for agents ${icon('arrow-right-up')}</a>
+  </dialog>
+  <dialog id="search-dialog" class="search-dialog" aria-label="Documentation search">
+    <div class="search-input-row">${icon('magnifier')}<label class="sr-only" for="search">Search documentation</label>
+      <input type="search" id="search" placeholder="Search documentation…" autocomplete="off" aria-controls="search-results">
+      <button type="button" class="icon-button close-search" aria-label="Close search">${icon('close-square')}</button>
+    </div>
+    <div id="search-results"><p>Search guides, API methods and lifecycle behavior.</p></div>
+    <div class="search-help"><span>Type to search</span><kbd>esc to close</kbd></div><span id="search-status" class="sr-only" role="status"></span>
+  </dialog>
+  <div id="copy-status" class="toast" role="status"></div>
+</body>
+</html>`;
+  const directory = page.slug === 'index' ? output : join(output, page.slug);
+  await mkdir(directory, { recursive: true });
+  const rendered = page.slug === 'index' ? html : html.replace(/\b(href|src)="(?![a-z]+:|\/|#)([^"]+)"/gi, (_, attribute, url) => `${attribute}="../${url}"`);
+  await writeFile(join(directory, 'index.html'), rendered);
+}
+await writeFile(join(output, 'search.json'), JSON.stringify(search));
+await writeFile(join(output, 'llms.txt'), `# Minksse\n\nFramework-independent server-sent events. Zero runtime dependencies.\n\n${documents.map(page => `- [${page.label}](${pageHref(page.slug)}): ${page.description}`).join('\n')}\n`);
+await writeFile(join(output, 'llms-full.txt'), documents.map(page => `# ${page.label}\n\n${page.description}\n\n${page.body.replace(/<[^>]+>/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')}`).join('\n\n'));
+console.log(`Built ${documents.length} documentation pages → build/docs`);
