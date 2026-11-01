@@ -36,6 +36,7 @@
     "build": "node scripts/build.mjs",
     "check": "node scripts/build.mjs && tsc --noEmit",
     "bench": "bun run build && node scripts/benchmark.mjs",
+    "bench:compare": "npm run build && npm --prefix benchmarks run bench --",
     "prepack": "npm run build",
     "test": "bun run docs:build && bun test ./tests/",
     "test:transport": "bun run build && bun test tests/client.test.js tests/server.test.js tests/producer-demand.test.js tests/resources.test.js tests/standalone.test.js tests/package.test.js",

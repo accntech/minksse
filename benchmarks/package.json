@@ -1,0 +1,21 @@
+{
+  "name": "minksse-comparison-benchmarks",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --conditions=svelte --test test/*.test.mjs",
+    "bench": "node --conditions=svelte run.mjs",
+    "smoke": "node --conditions=svelte run.mjs --events=100 --clients=2 --warmup=1 --repeats=1 --output=results/smoke.json"
+  },
+  "dependencies": {
+    "@fastify/sse": "0.6.1",
+    "better-sse": "0.16.1",
+    "esbuild": "0.28.2",
+    "fastify": "5.12.7",
+    "hono": "4.13.16",
+    "sveltekit-sse": "0.15.1"
+  }
+}
