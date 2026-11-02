@@ -2,7 +2,6 @@ import { expect, spyOn, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
 import { Buffer } from 'node:buffer';
 import { produce, SSE_MAX_BUFFER_BYTES } from '../src/server.js';
-import { installProducerCapabilities } from '../src/producer-capabilities.js';
 
 const decoder = new TextDecoder();
 const wire = (id, event, data) => `id: ${id}\nevent: ${event}\ndata: ${data.replace(/\r\n|\r|\n/g, '\ndata: ')}\n\n`;
@@ -82,9 +81,8 @@ for (const invalid of ['malformed', 'oversized']) {
 }
 
 for (const extra of [0, 1]) {
-  test(`native Unicode and newline accounting refreshes a getter-freed budget at the exact limit plus ${extra} byte`, async () => {
+  test(`Web Unicode and newline accounting refreshes a getter-freed budget at the exact limit plus ${extra} byte`, async () => {
     const { response, controls, reader, cleanups } = open();
-    expect(installProducerCapabilities(response.body, { byteLength: Buffer.byteLength })).toBe(true);
     const earlier = 'p'.repeat(192 * 1024);
     expect(controls.emit('old', earlier).error).toBe(false);
     const event = '更新😀';
@@ -131,7 +129,6 @@ for (const extra of [0, 1]) {
 for (const extra of [0, 1]) {
   test(`reusing cached scalar data refreshes a getter-freed batch budget at the exact boundary plus ${extra} byte`, async () => {
     const { response, controls, reader, cleanups } = open();
-    expect(installProducerCapabilities(response.body, { byteLength: Buffer.byteLength })).toBe(true);
     const earlier = 'p'.repeat(192 * 1024);
     const cached = 'é😀\r\ncached\rtail\n';
     expect(controls.emit('old', earlier).error).toBe(false);
@@ -218,16 +215,11 @@ test('batch budget bookkeeping does not read the stream controller once per memb
   expect({ status: result.status, stderr: result.stderr, error: result.error?.message }).toEqual({ status: 0, stderr: '', error: undefined });
 });
 
-test('a validated batch counts a large event header once and preserves every event header', async () => {
+test('a validated batch preserves every large event header', async () => {
   const { controls, reader, cleanups, response } = open();
   const event = '更新😀'.repeat(512);
-  const counted = [];
   try {
-    expect(installProducerCapabilities(response.body, { byteLength(value) {
-      counted.push(value); return Buffer.byteLength(value, 'utf8');
-    } })).toBe(true);
     expect(controls.emitBatch(event, ['one', 'two', 'three']).error).toBe(false);
-    expect(counted.filter(value => value === event).length).toBe(1);
     expect(controls.emit('next', 'after the batch').error).toBe(false);
     controls.lock.set(false);
     const output = [];

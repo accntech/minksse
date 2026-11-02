@@ -3,7 +3,7 @@ import { produce, SSE_MAX_BUFFER_BYTES } from '../src/server.js';
 
 const decoder = new TextDecoder();
 
-describe('native SSE producer', () => {
+describe('Web API SSE producer', () => {
 	test('carriage returns in data cannot inject another SSE event', async () => {
 		const response = produce(({ emit, lock }) => {
 			emit('notice', 'first\revent: injected\r\ndata: unexpected');

@@ -1,6 +1,5 @@
 /** Compile-only consumer of the built public declarations. */
 import { createSseConnection, createSseParser, produce, SSE_MAX_BUFFER_BYTES } from 'minksse';
-import { writeSseResponse } from 'minksse/node';
 /**
  * @typedef {import('minksse/client').SseConnection} SseConnection
  * @typedef {import('minksse/client').SseConnectionOptions} SseConnectionOptions
@@ -76,13 +75,3 @@ const response = produce((/** @type {SseStreamControls} */ controls) => {
   return () => [result, batch];
 }, streamOptions);
 void response;
-
-/** @param {import('node:http').ServerResponse} destination */
-function writeNodeResponse(destination) {
-  /** @type {Promise<void>} */
-  const completed = writeSseResponse(new Response(''), destination, { signal: new AbortController().signal });
-  // @ts-expect-error AbortSignal is required when provided.
-  writeSseResponse(new Response(''), destination, { signal: false });
-  return completed;
-}
-void writeNodeResponse;

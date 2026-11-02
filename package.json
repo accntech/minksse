@@ -23,10 +23,6 @@
     "./parser": {
       "types": "./dist/parser.d.ts",
       "import": "./dist/parser.js"
-    },
-    "./node": {
-      "types": "./dist/node.d.ts",
-      "import": "./dist/node.js"
     }
   },
   "files": [
@@ -43,7 +39,7 @@
     "bench:compare": "npm run build && npm --prefix benchmarks run bench --",
     "prepack": "npm run build",
     "test": "bun run docs:build && bun test ./tests/",
-    "test:transport": "bun run build && bun test tests/client.test.js tests/client-performance.test.js tests/native-client.test.js tests/server.test.js tests/producer-demand.test.js tests/coalescing.test.js tests/batch.test.js tests/batch-budget.test.js tests/performance-framing.test.js tests/producer-capabilities.test.js tests/node-capabilities.test.js tests/node-counter.test.js tests/native-queue.test.js tests/native-batch.test.js tests/native-ready.test.js tests/native-owned-output.test.js tests/native-transfer.test.js tests/node-adapter.test.js tests/resources.test.js tests/standalone.test.js tests/package.test.js",
+    "test:transport": "bun run build && bun test tests/client.test.js tests/client-performance.test.js tests/native-client.test.js tests/server.test.js tests/generic-stream.test.js tests/portable-performance.test.js tests/unicode-encoding.test.js tests/coalescing-safety.test.js tests/producer-demand.test.js tests/coalescing.test.js tests/batch.test.js tests/batch-budget.test.js tests/performance-framing.test.js tests/resources.test.js tests/standalone.test.js tests/package.test.js",
     "docs:build": "bun run build && node docs/site/build.mjs",
     "docs:preview": "node docs/site/serve.mjs",
     "test:docs": "bun run docs:build && bun test tests/docs.test.js"

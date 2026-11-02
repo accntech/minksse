@@ -1,10 +1,13 @@
-import { registerProducerCapabilities } from './producer-capabilities.js';
-
 /** Maximum queued SSE bytes per connection. Slow clients disconnect and reconnect normally. */
 export const SSE_MAX_BUFFER_BYTES = 256 * 1024;
 const NON_ASCII = /[^\x00-\x7f]/;
 const LINE_BREAKS = /[\r\n]/;
 const COMPLEX_DATA = /[\r\n\u0080-\uFFFF]/;
+const DEFAULT_HEADERS = {
+    'Cache-Control': 'no-store',
+    'Content-Type': 'text/event-stream',
+    Connection: 'keep-alive'
+};
 /**
  * @typedef {{ error?: Error | false }} EmitResult
  * @typedef {object} SseStreamControls
@@ -59,7 +62,7 @@ function compactString(value) {
  * @returns {Response}
  */
 export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, headers, onStop } = {}) {
-    /** @typedef {{ wire: string, bytes: number, output?: Uint8Array }} Frame */
+    /** @typedef {{ wire: string, bytes: number }} Frame */
     /** @typedef {{ frames: Array<Frame | undefined>, bytes: number, available: number, nextId: number, error?: Error }} StagedBatch */
     /** @type {StagedBatch | undefined} */
     let activeBatch;
@@ -72,17 +75,9 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
     let controller;
     let id = 1;
     const encoder = new TextEncoder();
-    /** @type {import('./producer-capabilities.js').ProducerState} */
-    const nativeCapabilities = {};
-    let nativeAttached = false;
-    let emittingDepth = 0;
+    // 0: unclassified, 1: ASCII so far, 2: Unicode observed in this response.
+    let encodingMode = 0;
     let webFlushing = false;
-    /** @type {Promise<void> | undefined} */
-    let nativeWait;
-    /** @type {(() => void) | undefined} */
-    let resolveNativeWait;
-    /** @type {(() => void) | undefined} */
-    let nativeReady;
     /** @type {string | undefined} */
     let lastEvent;
     let eventBytes = 0;
@@ -103,12 +98,12 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
      */
     function queueFrame(queue, wire, bytes) {
         const tail = coalesceBytes ? queue[queue.length - 1] : undefined;
-        if (tail && !tail.output && tail.bytes + bytes <= coalesceBytes) {
+        if (tail && tail.bytes + bytes <= coalesceBytes) {
             tail.wire += wire;
             tail.bytes += bytes;
         }
         else {
-            if (tail && !tail.output)
+            if (tail)
                 tail.wire = compactString(tail.wire);
             queue.push({ wire, bytes });
         }
@@ -135,33 +130,13 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
             return undefined;
         frames[head++] = undefined;
         queuedBytes -= frame.bytes;
-        if (head === frames.length) {
-            if (nativeAttached) {
-                // The detached frame belongs to the adapter. Keep the now-empty
-                // private array for scalar reuse; a new batch may replace it.
-                frames.length = 0;
-                head = 0;
-                queuedBytes = 0;
-            }
-            else
-                discardFrames();
-        }
+        if (head === frames.length)
+            discardFrames();
         else if (head >= 128 && head * 2 >= frames.length) {
             frames = frames.slice(head);
             head = 0;
         }
         return frame;
-    }
-    function wakeNative() {
-        const resolve = resolveNativeWait;
-        const ready = nativeReady;
-        resolveNativeWait = undefined;
-        nativeWait = undefined;
-        nativeReady = undefined;
-        resolve?.();
-        // Delivery remains outside producer acceptance and reentrant getters.
-        if (ready)
-            (nativeCapabilities.scheduleReady ?? queueMicrotask)(ready);
     }
     /** @param {Error} [error] */
     function endBody(error) {
@@ -175,26 +150,17 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
                 controller?.close();
         }
         catch { /* Reader cancellation already closes the controller. */ }
-        finally {
-            // A retained completed Web body must not retain producer context
-            // through the private registry's native queue control closures.
-            nativeCapabilities.control = undefined;
-            wakeNative();
-        }
     }
     function flush() {
-        if (nativeAttached || bodyEnded || webFlushing || (controller.desiredSize ?? 0) < 0)
+        if (!queuedBytes || bodyEnded || webFlushing || (controller.desiredSize ?? 0) < 0)
             return;
         webFlushing = true;
         try {
             const frame = popFrame();
             if (frame) {
                 try {
-                    const chunk = encoder.encode(frame.wire);
-                    // tryAttach() also rejects during this synchronous flush.
-                    // A scheduled Web pull can never enqueue in native mode.
-                    if (!nativeAttached)
-                        controller.enqueue(chunk);
+                    if (frame.bytes > frame.wire.length) encodingMode = 2;
+                    controller.enqueue(encoder.encode(frame.wire));
                 }
                 catch (cause) {
                     stop(cause instanceof Error ? cause : new Error(String(cause)));
@@ -242,8 +208,6 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
         cleanup = undefined;
         runCleanup(pendingCleanup);
         runCleanup(onStop);
-        if (queuedBytes)
-            wakeNative();
     }
     function abort() {
         stop();
@@ -262,7 +226,6 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
     function emitValue(event, data, stage) {
         if (stopped)
             return new Error('Client disconnected from the stream.');
-        const nativeByteLength = nativeCapabilities.byteLength;
         try {
             if (typeof data !== 'string' || (!stage && typeof event !== 'string')) {
                 throw new Error('Event name and data must be strings.');
@@ -273,15 +236,15 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
             if ((!stage || stage.bytes === 0) && event !== lastEvent) {
                 if (LINE_BREAKS.test(event))
                     throw new Error('Event name must not contain new line characters.');
-                eventBytes = nativeByteLength ? nativeByteLength(event) : utf8Length(event);
+                eventBytes = utf8Length(event);
                 lastEvent = compactString(event);
                 eventSuffix = ['\nevent: ', lastEvent, '\ndata: '].join('');
             }
             const idText = String(stage ? stage.nextId : id);
             // Account for the one encoded prefetch frame as well as the unencoded backlog.
-            const nativeQueuedBytes = stage ? 0 : Math.max(0, -(controller.desiredSize ?? 0));
-            let available = stage ? stage.available - stage.bytes : SSE_MAX_BUFFER_BYTES - queuedBytes - nativeQueuedBytes;
-            const direct = !nativeAttached && !stage && !queuedBytes && nativeQueuedBytes === 0;
+            const prefetchedBytes = stage ? 0 : Math.max(0, -(controller.desiredSize ?? 0));
+            let available = stage ? stage.available - stage.bytes : SSE_MAX_BUFFER_BYTES - queuedBytes - prefetchedBytes;
+            const direct = !stage && !queuedBytes && prefetchedBytes === 0;
             let wireBytes = 21 + idText.length + eventBytes;
             let framedData;
             if (data === lastData) {
@@ -295,62 +258,32 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
                 if (wireBytes + data.length > available && (!stage || wireBytes + data.length > (available = refreshStageBudget(stage))))
                     throw new Error('SSE client exceeded the stream buffer limit.');
                 let multiline = false;
-                if (nativeByteLength) {
-                    wireBytes += nativeByteLength(data);
-                    if (wireBytes > available && (!stage || wireBytes > (available = refreshStageBudget(stage))))
-                        throw new Error('SSE client exceeded the stream buffer limit.');
-                    let cr = data.indexOf('\r');
-                    let lf = data.indexOf('\n');
-                    multiline = cr >= 0 || lf >= 0;
-                    // Raw UTF-8 already includes each CR/LF byte. Normalized
-                    // SSE adds six bytes per break, minus one for a CRLF pair.
-                    while (cr >= 0 || lf >= 0) {
-                        if (cr >= 0 && (lf < 0 || cr < lf)) {
-                            const pair = lf === cr + 1;
-                            wireBytes += pair ? 5 : 6;
-                            if (wireBytes > available && (!stage || wireBytes > (available = refreshStageBudget(stage))))
-                                throw new Error('SSE client exceeded the stream buffer limit.');
-                            const next = cr + (pair ? 2 : 1);
-                            cr = data.indexOf('\r', next);
-                            if (pair)
-                                lf = data.indexOf('\n', next);
-                        }
-                        else {
-                            wireBytes += 6;
-                            if (wireBytes > available && (!stage || wireBytes > (available = refreshStageBudget(stage))))
-                                throw new Error('SSE client exceeded the stream buffer limit.');
-                            lf = data.indexOf('\n', lf + 1);
-                        }
-                    }
-                }
+                const simpleData = !COMPLEX_DATA.test(data);
+                if (simpleData)
+                    wireBytes += data.length;
                 else {
-                    const simpleData = !COMPLEX_DATA.test(data);
-                    if (simpleData)
-                        wireBytes += data.length;
-                    else {
-                        // Count UTF-8 and normalized line prefixes without expanded strings.
-                        for (let index = 0; index < data.length; index++) {
-                            const code = data.charCodeAt(index);
-                            if (code === 13 || code === 10) {
-                                multiline = true;
-                                wireBytes += 7;
-                                if (code === 13 && data.charCodeAt(index + 1) === 10)
-                                    index++;
-                            }
-                            else if (code < 0x80)
-                                wireBytes++;
-                            else if (code < 0x800)
-                                wireBytes += 2;
-                            else if (code >= 0xD800 && code <= 0xDBFF &&
-                                data.charCodeAt(index + 1) >= 0xDC00 && data.charCodeAt(index + 1) <= 0xDFFF) {
-                                wireBytes += 4;
+                    // Count UTF-8 and normalized line prefixes without expanded strings.
+                    for (let index = 0; index < data.length; index++) {
+                        const code = data.charCodeAt(index);
+                        if (code === 13 || code === 10) {
+                            multiline = true;
+                            wireBytes += 7;
+                            if (code === 13 && data.charCodeAt(index + 1) === 10)
                                 index++;
-                            }
-                            else
-                                wireBytes += 3;
-                            if (wireBytes > available && (!stage || wireBytes > (available = refreshStageBudget(stage))))
-                                throw new Error('SSE client exceeded the stream buffer limit.');
                         }
+                        else if (code < 0x80)
+                            wireBytes++;
+                        else if (code < 0x800)
+                            wireBytes += 2;
+                        else if (code >= 0xD800 && code <= 0xDBFF &&
+                            data.charCodeAt(index + 1) >= 0xDC00 && data.charCodeAt(index + 1) <= 0xDFFF) {
+                            wireBytes += 4;
+                            index++;
+                        }
+                        else
+                            wireBytes += 3;
+                        if (wireBytes > available && (!stage || wireBytes > (available = refreshStageBudget(stage))))
+                            throw new Error('SSE client exceeded the stream buffer limit.');
                     }
                 }
                 // Immediate delivery and isolated batch staging retain no raw
@@ -400,111 +333,6 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
             return error;
         }
     }
-    /**
-     * Native attachment excludes Web prefetch, and activeBatch prevents queue
-     * consumption. Keep this fixed budget and per-batch metadata local while
-     * validating each getter result before accessing the next array element.
-     * @param {string} event
-     * @param {readonly string[]} values
-     * @param {number} length
-     * @param {StagedBatch} stage
-     * @param {(value: string) => number} byteLength
-     * @returns {Error | undefined}
-     */
-    function stageNativeBatch(event, values, length, stage, byteLength) {
-        let nextId = stage.nextId;
-        let bytes = 0;
-        let available = stage.available;
-        let headerEventBytes = eventBytes;
-        let suffix = eventSuffix;
-        const eventLength = event.length;
-        const cachedData = lastData;
-        const cachedFramedData = lastFramedData;
-        const cachedDataBytes = lastDataBytes;
-        const stagedFrames = stage.frames;
-        // These groups cannot escape until the entire atomic batch succeeds.
-        // Keep the open group local rather than mutating a tail for each event.
-        const willEncode = !queuedBytes && !!nativeCapabilities.encodeOwned;
-        let groupWire = '';
-        let groupBytes = 0;
-        for (let index = 0; index < length; index++) {
-            const data = values[index];
-            if (stopped)
-                return stage.error ?? new Error('SSE stream stopped before batch delivery.');
-            if (typeof data !== 'string')
-                throw new Error('Event name and data must be strings.');
-            if (eventLength + data.length > SSE_MAX_BUFFER_BYTES)
-                throw new Error('SSE client exceeded the stream buffer limit.');
-            if (index === 0 && event !== lastEvent) {
-                headerEventBytes = byteLength(event);
-                lastEvent = compactString(event);
-                suffix = ['\nevent: ', lastEvent, '\ndata: '].join('');
-                eventBytes = headerEventBytes;
-                eventSuffix = suffix;
-            }
-            const idText = String(nextId);
-            let wireBytes = 21 + idText.length + headerEventBytes;
-            let framedData;
-            if (data === cachedData) {
-                wireBytes += cachedDataBytes;
-                if (wireBytes > available)
-                    throw new Error('SSE client exceeded the stream buffer limit.');
-                framedData = cachedFramedData;
-            }
-            else {
-                if (wireBytes + data.length > available)
-                    throw new Error('SSE client exceeded the stream buffer limit.');
-                wireBytes += byteLength(data);
-                if (wireBytes > available)
-                    throw new Error('SSE client exceeded the stream buffer limit.');
-                let cr = data.indexOf('\r');
-                let lf = data.indexOf('\n');
-                const multiline = cr >= 0 || lf >= 0;
-                // Match emitValue's exact normalized UTF-8 accounting: raw
-                // bytes already include CR/LF, so add six, or five for CRLF.
-                while (cr >= 0 || lf >= 0) {
-                    if (cr >= 0 && (lf < 0 || cr < lf)) {
-                        const pair = lf === cr + 1;
-                        wireBytes += pair ? 5 : 6;
-                        if (wireBytes > available)
-                            throw new Error('SSE client exceeded the stream buffer limit.');
-                        const next = cr + (pair ? 2 : 1);
-                        cr = data.indexOf('\r', next);
-                        if (pair)
-                            lf = data.indexOf('\n', next);
-                    }
-                    else {
-                        wireBytes += 6;
-                        if (wireBytes > available)
-                            throw new Error('SSE client exceeded the stream buffer limit.');
-                        lf = data.indexOf('\n', lf + 1);
-                    }
-                }
-                framedData = multiline ? data.replace(/\r\n|\r|\n/g, '\ndata: ') : data;
-            }
-            const wire = `id: ${idText}${suffix}${framedData}\n\n`;
-            if (!coalesceBytes)
-                stagedFrames.push({ wire, bytes: wireBytes });
-            else if (groupBytes && groupBytes + wireBytes <= coalesceBytes) {
-                groupWire += wire;
-                groupBytes += wireBytes;
-            }
-            else {
-                if (groupBytes)
-                    stagedFrames.push({ wire: willEncode ? groupWire : compactString(groupWire), bytes: groupBytes });
-                groupWire = wire;
-                groupBytes = wireBytes;
-            }
-            available -= wireBytes;
-            bytes += wireBytes;
-            nextId++;
-        }
-        if (groupBytes)
-            stagedFrames.push({ wire: groupWire, bytes: groupBytes });
-        stage.bytes = bytes;
-        stage.nextId = nextId;
-        return undefined;
-    }
     /** @returns {EmitResult} */
     function reentrantBatch() {
         const error = new Error('Cannot emit reentrantly while validating an SSE batch.');
@@ -517,18 +345,8 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
     function emit(event, data) {
         if (activeBatch && !stopped)
             return reentrantBatch();
-        let accepted = false;
-        emittingDepth++;
-        try {
-            const error = emitValue(event, data);
-            accepted = !error;
-            return { error: error ?? false };
-        }
-        finally {
-            emittingDepth--;
-            if (accepted && nativeAttached && queuedBytes && !emittingDepth)
-                wakeNative();
-        }
+        const error = emitValue(event, data);
+        return { error: error ?? false };
     }
     /** @param {string} event @param {readonly string[]} values @returns {EmitResult} */
     function emitBatch(event, values) {
@@ -538,7 +356,6 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
             return reentrantBatch();
         /** @type {StagedBatch} */
         const stage = { frames: [], bytes: 0, available: 0, nextId: id };
-        let committed = false;
         activeBatch = stage;
         try {
             if (typeof event !== 'string' || LINE_BREAKS.test(event))
@@ -552,74 +369,184 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
                 return { error: stage.error ?? new Error('SSE stream stopped before batch delivery.') };
             if (length)
                 refreshStageBudget(stage);
-            const nativeByteLength = nativeAttached ? nativeCapabilities.byteLength : undefined;
-            if (nativeByteLength) {
-                const error = stageNativeBatch(event, values, length, stage, nativeByteLength);
-                if (error)
-                    return { error };
-            }
-            else {
-                for (let index = 0; index < length; index++) {
-                    const value = values[index];
-                    if (stopped)
-                        return { error: stage.error ?? new Error('SSE stream stopped before batch delivery.') };
-                    const error = emitValue(event, value, stage);
-                    if (error)
-                        return { error };
+            let suffix = eventSuffix;
+            let nameBytes = eventBytes;
+            let nextId = id;
+            let batchBytes = 0;
+            let available = stage.available;
+            let groupWire = '';
+            let groupBytes = 0;
+            // Three UTF-8 bytes per UTF-16 unit is a safe upper bound (pairs
+            // use four bytes for two units). A complete framed batch that fits
+            // this bound needs no separate payload scan before its one encode.
+            let bounded = coalesceBytes > 0 && !queuedBytes && (controller.desiredSize ?? 0) >= 0;
+            let upperBytes = 0;
+            /** @type {string[]} */
+            const captured = [];
+            for (let index = 0; index < length; index++) {
+                const value = index < captured.length ? captured[index] : values[index];
+                if (stopped)
+                    return { error: stage.error ?? new Error('SSE stream stopped before batch delivery.') };
+                if (typeof value !== 'string')
+                    throw new Error('Event name and data must be strings.');
+                if (event.length + value.length > SSE_MAX_BUFFER_BYTES)
+                    throw new Error('SSE client exceeded the stream buffer limit.');
+                if (event !== lastEvent) {
+                    eventBytes = utf8Length(event);
+                    lastEvent = compactString(event);
+                    eventSuffix = ['\nevent: ', lastEvent, '\ndata: '].join('');
+                    suffix = eventSuffix;
+                    nameBytes = eventBytes;
                 }
-            }
-            // No live queue, body chunk, or ID was published while reading the
-            // array. Getters may abort/cancel/reenter; only a valid batch commits.
-            id = stage.nextId;
-            if (nativeAttached && !queuedBytes && stage.bytes) {
-                // Seal every raw group into owned bytes when Node supports it;
-                // otherwise detach the remaining string tail(s). Transfer the
-                // validated queue without allocating duplicate frame objects.
-                const lastFrame = stage.frames[stage.frames.length - 1];
-                const encodeOwned = nativeCapabilities.encodeOwned;
-                if (encodeOwned) {
-                    // Seal only after every getter and byte bound has passed.
-                    // Encoded groups are closed; later output starts a new group.
-                    for (const frame of stage.frames) {
-                        if (frame) {
-                            frame.output = encodeOwned(frame.wire, frame.bytes);
-                            frame.wire = '';
+                if (bounded) {
+                    captured.push(value);
+                    let wire = `id: ${nextId}${suffix}${value}\n\n`;
+                    let bound = upperBytes + wire.length * 3;
+                    // Predict uniform large batches early. This only declines
+                    // an optimization; exact staging still validates every value.
+                    if (index === 0 && bound * length > coalesceBytes) {
+                        bounded = false;
+                        nextId = id;
+                        groupWire = '';
+                        index = -1;
+                        continue;
+                    }
+                    let cr = value.indexOf('\r');
+                    let lf = value.indexOf('\n');
+                    if (cr >= 0 || lf >= 0) {
+                        // UTF-8 of the raw frame costs at most 3×UTF-16 units.
+                        // SSE adds six bytes per CR/LF break (five for CRLF).
+                        // Count first; never allocate expanded data until proven safe.
+                        if (bound <= coalesceBytes && bound <= available) {
+                            while (cr >= 0 || lf >= 0) {
+                                bound += 6;
+                                if (bound > coalesceBytes || bound > available) break;
+                                if (cr >= 0 && (lf < 0 || cr < lf)) {
+                                    const pair = lf === cr + 1;
+                                    const next = cr + (pair ? 2 : 1);
+                                    cr = value.indexOf('\r', next);
+                                    if (pair) lf = value.indexOf('\n', next);
+                                }
+                                else lf = value.indexOf('\n', lf + 1);
+                            }
+                        }
+                        if (bound <= coalesceBytes && bound <= available)
+                            wire = `id: ${nextId}${suffix}${value.replace(/\r\n|\r|\n/g, '\ndata: ')}\n\n`;
+                    }
+                    if (bound <= coalesceBytes && bound <= available) {
+                        upperBytes = bound;
+                        groupWire += wire;
+                        nextId++;
+                        continue;
+                    }
+                    // Resume exact staging from captured values. No user getter
+                    // is evaluated twice, and exact overflow is checked before
+                    // another value can be read.
+                    bounded = false;
+                    nextId = id;
+                    groupWire = '';
+                    index = -1;
+                    continue;
+                }
+                const idText = String(nextId);
+                let wireBytes = 21 + idText.length + nameBytes;
+                let remaining = available - batchBytes;
+                if (wireBytes + value.length > remaining) {
+                    stage.bytes = batchBytes;
+                    remaining = refreshStageBudget(stage);
+                    available = stage.available;
+                    if (wireBytes + value.length > remaining)
+                        throw new Error('SSE client exceeded the stream buffer limit.');
+                }
+                let multiline = false;
+                if (!COMPLEX_DATA.test(value))
+                    wireBytes += value.length;
+                else {
+                    for (let offset = 0; offset < value.length; offset++) {
+                        const code = value.charCodeAt(offset);
+                        if (code === 13 || code === 10) {
+                            multiline = true;
+                            wireBytes += 7;
+                            if (code === 13 && value.charCodeAt(offset + 1) === 10) offset++;
+                        }
+                        else if (code < 0x80) wireBytes++;
+                        else if (code < 0x800) wireBytes += 2;
+                        else if (code >= 0xD800 && code <= 0xDBFF &&
+                            value.charCodeAt(offset + 1) >= 0xDC00 && value.charCodeAt(offset + 1) <= 0xDFFF) {
+                            wireBytes += 4;
+                            offset++;
+                        }
+                        else wireBytes += 3;
+                        if (wireBytes > remaining) {
+                            stage.bytes = batchBytes;
+                            remaining = refreshStageBudget(stage);
+                            available = stage.available;
+                            if (wireBytes > remaining)
+                                throw new Error('SSE client exceeded the stream buffer limit.');
                         }
                     }
                 }
-                else if (coalesceBytes) {
-                    if (lastFrame)
-                        lastFrame.wire = compactString(lastFrame.wire);
+                const framed = multiline ? value.replace(/\r\n|\r|\n/g, '\ndata: ') : value;
+                const wire = `id: ${idText}${suffix}${framed}\n\n`;
+                if (groupBytes && (!coalesceBytes || groupBytes + wireBytes > coalesceBytes)) {
+                    stage.frames.push({ wire: groupWire, bytes: groupBytes });
+                    groupWire = wire;
+                    groupBytes = wireBytes;
                 }
                 else {
-                    for (const frame of stage.frames) {
-                        if (frame)
-                            frame.wire = compactString(frame.wire);
-                    }
+                    groupWire += wire;
+                    groupBytes += wireBytes;
                 }
-                frames = stage.frames;
-                head = 0;
-                queuedBytes = stage.bytes;
+                batchBytes += wireBytes;
+                nextId++;
             }
-            else {
-                const lastFrame = stage.frames[stage.frames.length - 1];
-                for (const frame of stage.frames) {
-                    if (!frame)
-                        continue;
-                    const nativeQueuedBytes = Math.max(0, -(controller.desiredSize ?? 0));
-                    if (!nativeAttached && !queuedBytes && nativeQueuedBytes === 0)
-                        controller.enqueue(encoder.encode(frame.wire));
+            if (bounded && length) {
+                // Classify once per response. Unicode streams avoid a partial
+                // pass; ASCII streams avoid rescanning every completed group.
+                let chunk;
+                if (typeof encoder.encodeInto === 'function') {
+                    if (nameBytes !== event.length) encodingMode = 2;
+                    else if (encodingMode === 0)
+                        encodingMode = NON_ASCII.test(groupWire) ? 2 : 1;
+                    if (encodingMode === 2) chunk = encoder.encode(groupWire);
                     else {
-                        // Closed positive-target groups were already compacted by
-                        // queueFrame. Copy a still-raw final group (or each scalar
-                        // group with coalescing off) only when live storage retains it.
-                        const owned = coalesceBytes && frame !== lastFrame ? frame.wire : compactString(frame.wire);
-                        queueFrame(frames, owned, frame.bytes);
-                        queuedBytes += frame.bytes;
+                        const destination = new Uint8Array(groupWire.length);
+                        const result = encoder.encodeInto(groupWire, destination);
+                        if (result.read === groupWire.length) chunk = destination;
+                        else {
+                            // An ASCII stream may later contain Unicode. Pay
+                            // discovery once, then use complete encodings.
+                            encodingMode = 2;
+                            chunk = encoder.encode(groupWire);
+                        }
                     }
                 }
+                else chunk = encoder.encode(groupWire);
+                controller.enqueue(chunk);
+                id = nextId;
+                return { error: false };
             }
-            committed = true;
+            if (groupBytes) stage.frames.push({ wire: groupWire, bytes: groupBytes });
+            stage.bytes = batchBytes;
+            stage.nextId = nextId;
+            // No live queue, body chunk, or ID was published while reading the
+            // array. Getters may abort/cancel/reenter; only a valid batch commits.
+            id = stage.nextId;
+            for (const frame of stage.frames) {
+                if (!frame)
+                    continue;
+                if (frame.bytes > frame.wire.length) encodingMode = 2;
+                const prefetchedBytes = Math.max(0, -(controller.desiredSize ?? 0));
+                if (!queuedBytes && prefetchedBytes === 0)
+                    controller.enqueue(encoder.encode(frame.wire));
+                else {
+                    // Only retained wire groups need ownership copies; staging
+                    // that is encoded immediately never retains caller strings.
+                    const owned = compactString(frame.wire);
+                    queueFrame(frames, owned, frame.bytes);
+                    queuedBytes += frame.bytes;
+                }
+            }
             return { error: false };
         }
         catch (cause) {
@@ -636,45 +563,8 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
                 eventBytes = 0;
             }
             activeBatch = undefined;
-            if (committed && nativeAttached && queuedBytes)
-                wakeNative();
         }
     }
-    // Construct the control before ReadableStream.start(): synchronous finish,
-    // abort or setup failure must clear it before the body is registered.
-    nativeCapabilities.control = {
-        tryAttach() {
-            if (nativeAttached || bodyEnded || activeBatch || emittingDepth || webFlushing ||
-                (controller.desiredSize ?? 0) < 0)
-                return false;
-            nativeAttached = true;
-            return true;
-        },
-        take() {
-            if (!nativeAttached || bodyEnded || activeBatch || emittingDepth || webFlushing)
-                return undefined;
-            const frame = popFrame();
-            if (stopped && !queuedBytes)
-                endBody();
-            return frame;
-        },
-        whenReady(callback) {
-            if (!nativeAttached || bodyEnded || queuedBytes)
-                (nativeCapabilities.scheduleReady ?? queueMicrotask)(callback);
-            else
-                nativeReady = callback;
-        },
-        wait() {
-            if (!nativeAttached || bodyEnded || queuedBytes)
-                return Promise.resolve();
-            if (!nativeWait) {
-                nativeWait = new Promise(resolve => { resolveNativeWait = resolve; });
-            }
-            return nativeWait;
-        },
-        isDone() { return bodyEnded; },
-        dispose() { cancelBody(); }
-    };
     try {
         if (!Number.isInteger(ping) || ping < 1 || ping > 2_147_483_647) {
             throw new RangeError('ping must be an integer between 1 and 2147483647');
@@ -682,12 +572,13 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
         if (!Number.isInteger(coalesceBytes) || coalesceBytes < 0 || coalesceBytes > SSE_MAX_BUFFER_BYTES) {
             throw new RangeError(`coalesceBytes must be an integer between 0 and ${SSE_MAX_BUFFER_BYTES}`);
         }
-        const responseHeaders = new Headers({
-            'Cache-Control': 'no-store',
-            'Content-Type': 'text/event-stream',
-            Connection: 'keep-alive'
-        });
-        new Headers(headers).forEach((value, key) => responseHeaders.set(key, value));
+        /** @type {HeadersInit} */
+        let responseHeaders = DEFAULT_HEADERS;
+        if (headers !== undefined) {
+            const overrides = new Headers(DEFAULT_HEADERS);
+            new Headers(headers).forEach((value, key) => overrides.set(key, value));
+            responseHeaders = overrides;
+        }
         const body = new ReadableStream(/** @type {UnderlyingDefaultSource<Uint8Array>} */ ({
             start(streamController) {
                 controller = streamController;
@@ -715,7 +606,6 @@ export function produce(start, { signal, ping = 30_000, coalesceBytes = 0, heade
             pull() { flush(); },
             cancel() { cancelBody(); }
         }), new ByteLengthQueuingStrategy({ highWaterMark: 0 }));
-        registerProducerCapabilities(body, nativeCapabilities);
         return new Response(body, { headers: responseHeaders });
     }
     catch (cause) {
