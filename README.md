@@ -10,13 +10,25 @@
 
 Server-Sent Events for JavaScript applications: produce a streaming Web `Response`, subscribe to named events over POST, or parse SSE text directly. Zero runtime dependencies, native JavaScript ESM, and TypeScript declarations generated from JSDoc.
 
-MinkSSE uses Web APIs and works independently of a frontend or server framework. You own each connection, its cleanup, and its retry policy.
+MinkSSE uses Web APIs and works independently of a frontend or server framework. Use the producer, client, and parser together, or import just the part your application needs.
+
+## Features
+
+- **Streaming responses with explicit cleanup.** Send named events, finish after accepted events drain, and release timers or subscriptions on termination. Abort signals, configurable heartbeats, and an `onStop` hook support long-lived connections.
+- **Bounded server buffering.** Each producer limits queued serialized UTF-8 wire data to 256 KiB. Oversized events and slow consumers terminate the stream instead of growing the queue indefinitely.
+- **Burst delivery without a batching timer.** `emitBatch()` validates an entire array of payloads before publishing its frames. Opt-in `coalesceBytes` combines queued complete events into fewer output chunks while keeping the first event immediate.
+- **Named JSON subscriptions over POST.** Subscribe multiple listeners to each event and dispose of each subscription independently. Malformed subscribed JSON and listener failures reach `onerror`; a failing listener does not block other listeners.
+- **Connection recovery you control.** Observe readiness with `onopen`, detect stalled streams with an idle timeout, and schedule retries through `onclose({ connect })`. Subscriptions survive reconnects; automatic retries and missed-event replay are not included.
+- **Node HTTP/1 integration.** `writeSseResponse()` forwards status and headers, flushes headers before the first event, respects socket backpressure, and cancels the source body on premature disconnect.
+- **Raw incremental parsing.** Parse SSE text across chunk boundaries, including split line endings, multiline data, comments, IDs, and Unicode. Receive raw strings without JSON decoding, with a configurable frame limit.
+- **Focused ESM imports.** Zero runtime dependencies, tree-shakeable ESM entry points, and TypeScript declarations generated from JSDoc. Node-specific code stays in `minksse/node`.
 
 | API | Purpose |
 | --- | --- |
-| `produce()` | Send named events from a server as an SSE `Response`. |
-| `createSseConnection()` | Open a POST stream and deliver subscribed events as parsed JSON. |
-| `createSseParser()` | Parse incremental SSE text into raw event, data, and ID strings. |
+| [`produce()`](#server-api) | Send named events from a server as an SSE `Response`. |
+| [`createSseConnection()`](#client-options) | Open a POST stream and deliver subscribed events as parsed JSON. |
+| [`createSseParser()`](#parser-api) | Parse incremental SSE text into raw event, data, and ID strings. |
+| [`writeSseResponse()`](#node-http-adapter) | Deliver a Web Response through a Node HTTP/1 response (`minksse/node`). |
 
 ## Install
 
@@ -39,9 +51,9 @@ npm install /absolute/path/to/minksse
 
 For a portable archive, run `npm pack` in the checkout, then install the generated `.tgz` file in your application. Packing builds the package automatically.
 
-The package ships ESM JavaScript and declarations under `dist/`. All public functions and types are available from `minksse`, or from the focused `minksse/server`, `minksse/client`, and `minksse/parser` entry points. CommonJS output is not provided.
+The package ships ESM JavaScript and declarations under `dist/`. Web functions and types are available from `minksse`, or from the focused `minksse/server`, `minksse/client`, and `minksse/parser` entry points. The Node adapter is available separately from `minksse/node`. CommonJS output is not provided.
 
-Use a runtime with Fetch, Streams, `Response`, `AbortController`, `TextEncoder`, and `TextDecoder` support. The server must support streaming Web Responses; Node HTTP servers need an adapter. Tests run with Bun and include Node.js interoperability checks.
+Use a runtime with Fetch, Streams, `Response`, `AbortController`, `TextEncoder`, and `TextDecoder` support. The server must support streaming Web Responses; Node HTTP/1 servers can use `writeSseResponse()`. Tests run with Bun and include real Node.js HTTP checks.
 
 ## Quick start
 
@@ -124,18 +136,69 @@ There is no replay or `Last-Event-ID` resume behavior. Authentication, session e
 | Control | Behavior |
 | --- | --- |
 | `emit(event, data)` | Returns `{ error: false }` on acceptance or `{ error: Error }` on failure. Invalid input or queue overflow terminates the stream. |
+| `emitBatch(event, values)` | Validate a readonly array of string payloads before publishing its frames. Returns the same result shape as `emit()`. Use with coalescing for already-available bursts. |
 | `lock.set(false)` | Finishes the stream after accepted frames drain. Cleanup runs immediately. |
 
 | Option | Default | Behavior |
 | --- | --- | --- |
 | `signal` | — | Stops the stream on abort. |
 | `ping` | `30_000` | Sends an empty named `ping` event at this interval in milliseconds. |
+| `coalesceBytes` | `0` | Opt-in target size for combining already queued events into an output chunk. Integer from 0 through 262,144; 0 preserves individual event chunks. |
 | `headers` | — | Overrides or adds response headers. Preserve `Content-Type: text/event-stream` for the bundled client. |
 | `onStop` | — | Caller cleanup on every terminal path, including a preaborted request, invalid configuration, or failed setup. |
 
 The returned cleanup function and `onStop` each run once. Normal finish, abort, reader cancellation, setup failure, invalid emits, and queue overflow release resources. A cleanup returned after synchronous termination still runs. Finalizers may return promises, but termination does not await them; failures are logged without blocking the other finalizer.
 
 Normal finish and abort drain accepted frames. Errors and reader cancellation discard the backlog. `ping` must be an integer from 1 through 2,147,483,647; invalid values throw `RangeError` before setup and still invoke `onStop`.
+
+Set `coalesceBytes: 16_384` to combine queued complete frames when the consumer reads. This reduces output chunks during bursts without waiting for more events or adding a timer. The first event remains immediate. A single event larger than the target stays whole, subject to the existing 256 KiB queue limit. Invalid coalescing values throw `RangeError` before setup and still invoke `onStop`. Network chunk boundaries are independent of SSE event boundaries; the client and parser continue to deliver events individually.
+
+For a burst already available as an array, `emitBatch()` can put its first group into one output chunk as well:
+
+```js
+const response = produce(({ emitBatch, lock }) => {
+  const result = emitBatch('update', [
+    JSON.stringify({ value: 1 }),
+    JSON.stringify({ value: 2 })
+  ]);
+  if (result.error) return; // Invalid input already terminates the stream.
+  lock.set(false);
+}, { coalesceBytes: 16_384 });
+```
+
+All values are validated synchronously before any new batch frame is published. An empty array consumes no event ID. Invalid input, overflow, throwing getters, or reentrant emission during validation terminates the stream without publishing a staged prefix. Abort or finish during array access discards staging and retains the usual drain behavior for earlier accepted events. This is validation atomicity, not network-atomic delivery. The batch must fit the available 256 KiB wire budget; divide larger inputs into paced batches. Coalescing off still produces individual event chunks. Scalar `emit()` retains immediate first-event delivery and does not wait for a batch.
+
+## Node HTTP adapter
+
+`writeSseResponse(response, destination, { signal }?)` is exported from `minksse/node`. It streams a Web `Response` to a fresh Node HTTP/1 `ServerResponse`, preserves status and headers (including separate cookies), flushes headers immediately, and observes socket backpressure. It resolves after Node's `finish` event, which means bytes were handed to the operating system rather than acknowledged by the remote client.
+
+```js
+import { createServer } from 'node:http';
+import { produce } from 'minksse/server';
+import { writeSseResponse } from 'minksse/node';
+
+const server = createServer((request, destination) => {
+  if (request.method !== 'POST' || request.url !== '/events') {
+    destination.writeHead(404).end();
+    return;
+  }
+  const response = produce(({ emit }) => {
+    const timer = setInterval(() => {
+      emit('tick', JSON.stringify({ time: Date.now() }));
+    }, 1_000);
+    return () => clearInterval(timer);
+  }, { coalesceBytes: 16_384 });
+
+  void writeSseResponse(response, destination).catch(error => {
+    if (error.name !== 'AbortError') console.error(error);
+  });
+});
+server.listen(3000);
+```
+
+When this adapter owns a MinkSSE response body, later emissions use Node's native UTF-8 byte counter. Synchronous emissions made before attachment and cloned or transformed bodies use the Web implementation. Validation, the 256 KiB queue limit, and output buffering options apply to both paths.
+
+Premature disconnect, stream errors, invalid response headers, and an optional abort signal reject the promise, cancel the body reader, and destroy an unfinished destination. Reader cancellation releases the producer's resources. Cancellation does not wait for an uncooperative underlying cancel callback. Catch the returned promise even when disconnects are expected. Headers must not have been sent before calling the adapter, and the response body must be unlocked. The adapter does not create routes or convert Node requests into Web requests. Its implementation is exercised against real Node HTTP sockets; browser entry points do not load it.
 
 ## Client options
 
@@ -195,6 +258,8 @@ Read the [documentation site instructions](https://github.com/accntech/minksse/b
 Source and executable tests are JavaScript. TypeScript is a development tool for checking JSDoc and generating declarations; `tests/types-consumer.js` verifies the types exposed to consumers. No TypeScript loader is needed at runtime.
 
 Tests cover framing, parser boundaries, connection lifecycle, cleanup, byte budgets, resource retention, and Node imports of all public entry points. Some resource tests use Bun GC and fresh subprocesses. Benchmark results vary by runtime and machine and are not CI thresholds; pass an earlier build directory to `node scripts/benchmark.mjs` to compare it with `dist/`.
+
+For HTTP comparisons against native SSE and other packages, follow the [comparison benchmark instructions](benchmarks/README.md). The [latest optimization report](benchmarks/NATIVE-PERFORMANCE.md) separates scalar and batch APIs, client load limits, CPU use, and the remaining native performance gap.
 
 ## License
 

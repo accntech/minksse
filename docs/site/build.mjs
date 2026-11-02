@@ -8,7 +8,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const output = join(root, 'build/docs');
 const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
 const boot = await readFile(join(root, 'docs/site/boot.js'), 'utf8');
-const declarations = await Promise.all(['index', 'server', 'client', 'parser'].map(async name => ({
+const declarations = await Promise.all(['index', 'server', 'client', 'parser', 'node'].map(async name => ({
   name, text: await readFile(join(root, `dist/${name}.d.ts`), 'utf8')
 })));
 const documents = pages({ types: declarations.filter(item => item.name !== 'index').map(item => item.text).join('\n\n') });
