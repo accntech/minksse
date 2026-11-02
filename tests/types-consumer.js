@@ -1,5 +1,6 @@
 /** Compile-only consumer of the built public declarations. */
 import { createSseConnection, createSseParser, produce, SSE_MAX_BUFFER_BYTES } from 'minksse';
+import { writeSseResponse } from 'minksse/node';
 /**
  * @typedef {import('minksse/client').SseConnection} SseConnection
  * @typedef {import('minksse/client').SseConnectionOptions} SseConnectionOptions
@@ -51,12 +52,28 @@ unsubscribe();
 connection.close();
 createSseParser((/** @type {SseMessage} */ message) => message.id);
 /** @type {SseStreamOptions} */
-const streamOptions = { ping: 30_000 };
+const streamOptions = { ping: 30_000, coalesceBytes: 16_384 };
+/** @type {SseStreamOptions} */
+// @ts-expect-error Coalescing is a numeric byte target.
+const invalidCoalescing = { coalesceBytes: '16384' };
 /** @type {Response} */
 const response = produce((/** @type {SseStreamControls} */ controls) => {
   /** @type {{ error?: Error | false }} */
   const result = controls.emit('limit', String(SSE_MAX_BUFFER_BYTES));
+  const batch = controls.emitBatch('limit', Object.freeze(['first', 'second']));
+  // @ts-expect-error Batch payloads must all be strings.
+  controls.emitBatch('limit', [123]);
   controls.lock.set(false);
-  return () => result;
+  return () => [result, batch];
 }, streamOptions);
 void response;
+
+/** @param {import('node:http').ServerResponse} destination */
+function writeNodeResponse(destination) {
+  /** @type {Promise<void>} */
+  const completed = writeSseResponse(new Response(''), destination, { signal: new AbortController().signal });
+  // @ts-expect-error AbortSignal is required when provided.
+  writeSseResponse(new Response(''), destination, { signal: false });
+  return completed;
+}
+void writeNodeResponse;

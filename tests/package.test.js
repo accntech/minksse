@@ -3,7 +3,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 const root = new URL("../", import.meta.url);
 test("native JavaScript source imports in Node and matches the public package API", () => {
-  expect(readdirSync(new URL("src/", root)).sort()).toEqual(["client.js", "index.js", "parser.js", "server.js"]);
+  expect(readdirSync(new URL("src/", root)).sort()).toEqual(["client.js", "index.js", "node.js", "parser.js", "producer-capabilities.js", "server.js"]);
   const result = spawnSync("node", ["--input-type=module", "--eval", `
     import assert from 'node:assert/strict';
     const source = await import('./src/index.js');
@@ -24,7 +24,7 @@ test("native JavaScript source imports in Node and matches the public package AP
   expect({ status: result.status, stderr: result.stderr }).toEqual({ status: 0, stderr: "" });
 });
 test("build emits the public ESM entry points and declarations", () => {
-  for (const entry of ["index", "client", "server", "parser"]) {
+  for (const entry of ["index", "client", "server", "parser", "node"]) {
     expect(existsSync(new URL(`dist/${entry}.js`, root))).toBe(true);
     expect(existsSync(new URL(`dist/${entry}.d.ts`, root))).toBe(true);
   }
@@ -36,6 +36,9 @@ test("Node imports the root and all public subpaths without a TypeScript loader"
     const client = await import('minksse/client');
     const server = await import('minksse/server');
     const parser = await import('minksse/parser');
+    const node = await import('minksse/node');
+    assert.equal(typeof node.writeSseResponse, 'function');
+    assert.equal('writeSseResponse' in root, false);
     assert.equal(root.createSseConnection, client.createSseConnection);
     assert.equal(root.produce, server.produce);
     assert.equal(root.createSseParser, parser.createSseParser);
