@@ -1,218 +1,201 @@
-import { createSseParser } from './parser.js';
 /**
  * @typedef {(value: unknown) => unknown} Listener
  * @typedef {{ listener?: Listener }} Subscription
  * @typedef {object} SseConnectionOptions
- * @property {typeof fetch} [fetch]
- * @property {number} [idleTimeoutMs=75000] Recover if no bytes arrive within this duration.
+ * @property {typeof EventSource} [eventSource] Native constructor override for runtimes without a global EventSource.
+ * @property {boolean} [withCredentials=false] Include cross-origin credentials.
+ * @property {(data: string, event: MessageEvent<string>) => unknown} [decode] Defaults to JSON.parse, except empty ping events.
+ * @property {number} [idleTimeoutMs=75000] Recover when no observed event arrives; 0 disables the timer.
+ * @property {string} [heartbeatEvent='ping'] Observe this named event even without a subscription.
  * @property {() => unknown} [onopen]
  * @property {(event: { connect: () => Promise<void> }) => unknown} [onclose]
  * @property {(cause: unknown) => unknown} [onerror]
- * @typedef {object} RequestState
- * @property {AbortController} controller
- * @property {ReadableStreamDefaultReader<Uint8Array>} [reader]
- * @property {ReturnType<typeof setTimeout>} [idleTimer]
+ * @typedef {object} Attempt
+ * @property {EventSource | undefined} source
+ * @property {Promise<void>} done
+ * @property {() => void} resolve
+ * @property {ReturnType<typeof setTimeout> | undefined} timer
+ * @property {number} deadline
+ * @property {Set<string>} names
+ * @property {EventListener} receive
+ * @property {EventListener} open
+ * @property {EventListener} error
  */
 
+/** @param {Event} event @returns {event is MessageEvent<string>} */
+function isMessage(event) {
+    // Constructor overrides may create events in another Window's realm.
+    return 'data' in event && typeof event.data === 'string';
+}
+
 /**
- * One explicitly owned POST stream; reconnect scheduling belongs to the caller.
+ * One owned native GET EventSource; reconnect scheduling belongs to the caller.
  * @param {string} url
  * @param {SseConnectionOptions} [options]
  */
 export function createSseConnection(url, options = {}) {
     const idleTimeoutMs = options.idleTimeoutMs ?? 75_000;
-    if (!Number.isInteger(idleTimeoutMs) || idleTimeoutMs < 1 || idleTimeoutMs > 2_147_483_647) {
-        throw new RangeError('idleTimeoutMs must be an integer between 1 and 2147483647');
-    }
-    /** @type {Map<string, Set<Subscription>>} */
+    if (!Number.isInteger(idleTimeoutMs) || idleTimeoutMs < 0 || idleTimeoutMs > 2_147_483_647)
+        throw new RangeError('idleTimeoutMs must be an integer between 0 and 2147483647');
+    const heartbeatEvent = options.heartbeatEvent ?? 'ping';
+    const decode = options.decode ?? ((data, event) => event.type === 'ping' && data === '' ? '' : JSON.parse(data));
+    /** @type {Map<string, readonly Subscription[]>} */
     const listeners = new Map();
     let closed = false;
-    /** @type {RequestState | undefined} */
+    /** @type {Attempt | undefined} */
     let active;
-    /** @type {Promise<void> | undefined} */
-    let running;
+
     /** @param {unknown} cause */
     function report(cause) {
         /** @param {unknown} error */
-        const failed = (error) => console.error('[sse] error observer failed', error);
+        const failed = error => console.error('[sse] error observer failed', error);
         try {
             const result = options.onerror?.(cause);
-            if (result)
+            if (result !== null && (typeof result === 'object' || typeof result === 'function'))
                 void Promise.resolve(result).catch(failed);
-        }
-        catch (error) {
-            failed(error);
-        }
+        } catch (error) { failed(error); }
     }
     /** @param {unknown} result */
-    function observe(result) {
-        if (result && typeof (/** @type {PromiseLike<unknown>} */ (result)).then === 'function') {
+    function observeResult(result) {
+        if (result !== null && (typeof result === 'object' || typeof result === 'function'))
             void Promise.resolve(result).catch(report);
+    }
+    /** @param {() => unknown} callback */
+    function observe(callback) {
+        try { observeResult(callback()); }
+        catch (cause) { report(cause); }
+    }
+    /** @param {Attempt} attempt */
+    function dispose(attempt) {
+        clearTimeout(attempt.timer);
+        const source = attempt.source;
+        if (source) {
+            source.removeEventListener('open', attempt.open);
+            source.removeEventListener('error', attempt.error);
+            for (const name of attempt.names) source.removeEventListener(name, attempt.receive);
+            source.close();
+        }
+        attempt.names.clear();
+        attempt.source = undefined;
+        attempt.resolve();
+    }
+    /** @param {Attempt} attempt @param {unknown} [cause] */
+    function finish(attempt, cause) {
+        if (active !== attempt) return;
+        active = undefined;
+        // Close before notifying observers: native automatic retries must never race caller recovery.
+        dispose(attempt);
+        if (cause !== undefined) report(cause);
+        if (!closed) observe(() => options.onclose?.({ connect }));
+    }
+    /** @param {Attempt} attempt @param {string} name */
+    function attach(attempt, name) {
+        if (!attempt.names.has(name)) {
+            attempt.source?.addEventListener(name, attempt.receive);
+            attempt.names.add(name);
         }
     }
     /** @returns {Promise<void>} */
     function connect() {
-        if (closed)
-            return Promise.resolve();
-        if (running)
-            return running;
-        /** @type {RequestState} */
-        const request = {
-            controller: new AbortController(),
-            reader: undefined,
-            idleTimer: undefined
-        };
-        active = request;
-        let idleDeadline = 0;
-        function checkIdleDeadline() {
-            const remaining = idleDeadline - performance.now();
-            if (remaining > 0) {
-                request.idleTimer = setTimeout(checkIdleDeadline, Math.ceil(remaining));
-                return;
-            }
-            request.controller.abort(new Error('Event stream idle timeout'));
-            void request.reader?.cancel().catch(() => { });
+        if (closed) return Promise.resolve();
+        if (active) return active.done;
+        /** @type {() => void} */
+        let resolve = () => {};
+        /** @type {Promise<void>} */
+        const done = new Promise(complete => { resolve = complete; });
+        /** @type {Attempt} */
+        const attempt = { source: undefined, done, resolve, timer: undefined, deadline: 0, names: new Set(), receive, open, error };
+        active = attempt;
+        function touch() { if (idleTimeoutMs > 0) attempt.deadline = performance.now() + idleTimeoutMs; }
+        function checkIdle() {
+            if (active !== attempt) return;
+            const remaining = attempt.deadline - performance.now();
+            if (remaining > 0) attempt.timer = setTimeout(checkIdle, Math.ceil(remaining));
+            else finish(attempt);
         }
-        function resetIdleDeadline() {
-            idleDeadline = performance.now() + idleTimeoutMs;
-            if (request.idleTimer === undefined) {
-                request.idleTimer = setTimeout(checkIdleDeadline, idleTimeoutMs);
+        /** @param {Event} event */
+        function receive(event) {
+            if (active !== attempt || !(isMessage(event))) return;
+            touch();
+            const subscribers = listeners.get(event.type);
+            if (!subscribers?.length) return;
+            // Subscription changes replace the array, so this is already a stable snapshot.
+            const snapshot = subscribers;
+            let value;
+            try { value = decode(event.data, event); }
+            catch (cause) { report(cause); return; }
+            for (let index = 0; index < snapshot.length; index++) {
+                if (active !== attempt || closed) break;
+                const listener = snapshot[index].listener;
+                if (!listener) continue;
+                try { observeResult(listener(value)); }
+                catch (cause) { report(cause); }
             }
         }
-        running = Promise.resolve().then(async () => {
-            try {
-                if (closed)
-                    return;
-                resetIdleDeadline();
-                const response = await (options.fetch ?? fetch)(url, {
-                    method: 'POST',
-                    headers: { accept: 'text/event-stream' },
-                    cache: 'no-store',
-                    signal: request.controller.signal
-                });
-                if (closed) {
-                    void response.body?.cancel().catch(() => { });
-                    return;
-                }
-                if (!response.ok || response.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase() !== 'text/event-stream') {
-                    void response.body?.cancel().catch(() => { });
-                    throw new Error(`Event stream rejected: ${response.status} ${response.statusText}`);
-                }
-                if (!response.body)
-                    throw new Error('Event stream has no response body');
-                request.reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                const parser = createSseParser(({ event, data }) => {
-                    if (closed || !listeners.has(event))
-                        return;
-                    let value;
-                    try {
-                        value = event === 'ping' && data === '' ? '' : JSON.parse(data);
-                    }
-                    catch (cause) {
-                        report(cause);
-                        return;
-                    }
-                    const subscribers = listeners.get(event);
-                    for (const subscription of [...(subscribers ?? [])]) {
-                        if (closed)
-                            break;
-                        if (!subscribers?.has(subscription))
-                            continue;
-                        const listener = subscription.listener;
-                        if (!listener)
-                            continue;
-                        try {
-                            observe(listener(value));
-                        }
-                        catch (cause) {
-                            report(cause);
-                        }
-                    }
-                });
-                try {
-                    observe(options.onopen?.());
-                }
-                catch (cause) {
-                    report(cause);
-                }
-                while (!closed) {
-                    const result = await request.reader.read();
-                    if (closed || result.done)
-                        break;
-                    if (result.value.byteLength)
-                        resetIdleDeadline();
-                    parser.push(decoder.decode(result.value, { stream: true }));
-                }
-                if (!closed)
-                    parser.push(decoder.decode());
+        /** @param {Event} event */
+        function open(event) {
+            if (active !== attempt || isMessage(event)) return;
+            touch();
+            observe(() => options.onopen?.());
+        }
+        /** @param {Event} event */
+        function error(event) {
+            if (!(isMessage(event))) finish(attempt, event);
+        }
+        try {
+            const Source = options.eventSource ?? globalThis.EventSource;
+            if (!Source) throw new Error('EventSource is unavailable; provide options.eventSource or use a runtime with native EventSource.');
+            attempt.source = new Source(url, { withCredentials: options.withCredentials ?? false });
+            attempt.source.addEventListener('open', open);
+            attempt.source.addEventListener('error', error);
+            for (const name of listeners.keys()) attach(attempt, name);
+            attach(attempt, heartbeatEvent);
+            if (idleTimeoutMs > 0) {
+                touch();
+                attempt.timer = setTimeout(checkIdle, idleTimeoutMs);
             }
-            catch (cause) {
-                if (!closed && !request.controller.signal.aborted)
-                    report(cause);
-            }
-            finally {
-                clearTimeout(request.idleTimer);
-                request.controller.abort();
-                // An underlying source may never settle cancellation. Recovery must not await it.
-                void request.reader?.cancel().catch(() => { });
-                request.reader?.releaseLock();
-                active = undefined;
-                running = undefined;
-                if (!closed) {
-                    try {
-                        observe(options.onclose?.({ connect }));
-                    }
-                    catch (cause) {
-                        report(cause);
-                    }
-                }
-            }
-        });
-        return running;
+        } catch (cause) { finish(attempt, cause); }
+        return done;
     }
-    queueMicrotask(() => { if (!closed)
-        void connect(); });
+    queueMicrotask(() => { if (!closed) void connect(); });
     return {
         get closed() { return closed; },
-        /**
-         * @param {string} name
-         * @param {Listener} listener
-         */
+        /** @param {string} name @param {Listener} listener */
         subscribe(name, listener) {
-            if (closed)
-                return () => { };
-            const subscribers = listeners.get(name) ?? new Set();
+            if (closed) return () => {};
             /** @type {Subscription} */
             const subscription = { listener };
-            subscribers.add(subscription);
-            listeners.set(name, subscribers);
-            let subscribed = true;
+            // Copy on registration, not on every event. Removed records are invalidated
+            // so in-flight snapshots still skip them, including during custom decoding.
+            listeners.set(name, [...(listeners.get(name) ?? []), subscription]);
+            if (active) attach(active, name);
             return () => {
-                if (!subscribed)
-                    return;
-                subscribed = false;
+                if (!subscription.listener) return;
                 subscription.listener = undefined;
-                subscribers.delete(subscription);
-                if (!subscribers.size && listeners.get(name) === subscribers)
+                const remaining = listeners.get(name)?.filter(value => value !== subscription);
+                if (remaining?.length) listeners.set(name, remaining);
+                else {
                     listeners.delete(name);
+                    if (active && name !== heartbeatEvent) {
+                        active.source?.removeEventListener(name, active.receive);
+                        active.names.delete(name);
+                    }
+                }
             };
         },
         close() {
-            if (closed)
-                return;
+            if (closed) return;
             closed = true;
             for (const subscribers of listeners.values()) {
-                for (const subscription of subscribers)
-                    subscription.listener = undefined;
-                subscribers.clear();
+                for (const subscription of subscribers) subscription.listener = undefined;
             }
             listeners.clear();
-            clearTimeout(active?.idleTimer);
-            active?.controller.abort();
-            void active?.reader?.cancel().catch(() => { });
+            if (active) {
+                const attempt = active;
+                active = undefined;
+                dispose(attempt);
+            }
         }
     };
 }
-
 /** @typedef {ReturnType<typeof createSseConnection>} SseConnection */

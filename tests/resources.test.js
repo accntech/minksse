@@ -1,6 +1,7 @@
 import { expect, spyOn, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { createSseConnection } from '../src/client.js';
+import { transport } from './helpers/event-source.js';
 import { createSseParser } from '../src/parser.js';
 import { produce, SSE_MAX_BUFFER_BYTES } from '../src/server.js';
 
@@ -44,25 +45,23 @@ test('unfinished parser line has bounded retained heap overhead', async () => {
   expect(result.heapBytes).toBeLessThan(4_000_000);
 });
 
-test('fragmented input uses one live idle timer rather than one timer per chunk', async () => {
-  const bytes = new TextEncoder().encode('data: 1\n\n'.repeat(100));
-  let offset = 0;
+test('heartbeat bursts use one live idle timer rather than one timer per event', async () => {
+  const wire = transport();
   let values = 0;
-  const ended = Promise.withResolvers      ();
   const timer = spyOn(globalThis, 'setTimeout');
   const connection = createSseConnection('/events', {
     idleTimeoutMs: 60_000,
-    fetch: (async () => new Response(new ReadableStream            ({
-      pull(controller) {
-        if (offset === bytes.length) controller.close();
-        else controller.enqueue(bytes.subarray(offset, ++offset));
-      }
-    }), { headers: { 'content-type': 'text/event-stream' } })),
-    onclose: () => ended.resolve()
+    eventSource: wire.eventSource
   });
   connection.subscribe('message', () => { values++; });
   try {
-    await ended.promise;
+    await Promise.resolve();
+    expect(wire.source).toBeDefined();
+    wire.open();
+    for (let index = 0; index < 100; index++) {
+      wire.send('ping', '');
+      wire.send('message', '1');
+    }
     expect(values).toBe(100);
     expect(timer).toHaveBeenCalledTimes(1);
   } finally { connection.close(); timer.mockRestore(); }
@@ -106,13 +105,12 @@ test('parser code-point budget is independent of surrogate-pair chunk boundaries
   }
 });
 
-test('idle deadline follows the last bytes without replacing the timer on each read', async () => {
+test('idle deadline follows heartbeat events without replacing the timer on each event', async () => {
   let now = 0;
   let callback;
   let delay = 0;
   let scheduleCount = 0;
-  let stream;
-  let signal;
+  const wire = transport();
   const ended = Promise.withResolvers      ();
   const opened = Promise.withResolvers      ();
   const clock = spyOn(performance, 'now').mockImplementation(() => now);
@@ -125,26 +123,26 @@ test('idle deadline follows the last bytes without replacing the timer on each r
   const clear = spyOn(globalThis, 'clearTimeout').mockImplementation(() => {});
   const connection = createSseConnection('/events', {
     idleTimeoutMs: 100,
-    fetch: (async (_url, init) => {
-      signal = init .signal ;
-      return new Response(new ReadableStream            ({ start(controller) { stream = controller; } }), { headers: { 'content-type': 'text/event-stream' } });
-    }),
+    eventSource: wire.eventSource,
     onopen: () => opened.resolve(), onclose: () => ended.resolve()
   });
   try {
+    await Promise.resolve();
+    expect(wire.source).toBeDefined();
+    wire.open();
     await opened.promise;
     now = 80;
-    stream.enqueue(new TextEncoder().encode(':heartbeat\n\n'));
+    wire.send('ping', '');
     for (let index = 0; index < 5; index++) await Promise.resolve();
     expect(scheduleCount).toBe(1);
     now = 100;
     callback();
-    expect(signal.aborted).toBe(false);
+    expect(wire.source.closed).toBe(false);
     expect(delay).toBe(80);
     now = 180;
     callback();
     await ended.promise;
-    expect(signal.aborted).toBe(true);
+    expect(wire.source.closed).toBe(true);
     expect(scheduleCount).toBe(2);
   } finally { connection.close(); clock.mockRestore(); timer.mockRestore(); clear.mockRestore(); }
 });

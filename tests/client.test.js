@@ -1,5 +1,6 @@
 import { expect, mock, spyOn, test } from 'bun:test';
 import { createSseConnection } from '../src/client.js';
+import { transport } from './helpers/event-source.js';
 import { createSseParser } from '../src/parser.js';
 
 test('parser preserves split CRLF, multiline data, comments, IDs, and empty data', () => {
@@ -19,213 +20,176 @@ test('parser rejects an oversized unfinished frame', () => {
   expect(() => parser.push('data: ' + 'x'.repeat(21))).toThrow('SSE frame exceeds');
 });
 
-function transport() {
-  let controller;
-  let signal;
-  const cancelled = mock(() => {});
-  const fetcher = mock(async (_url, options) => {
-    signal = options.signal ;
-    return new Response(new ReadableStream            ({
-      start(value) { controller = value; },
-      cancel: cancelled
-    }), { headers: { 'content-type': 'text/event-stream' } });
-  });
-  return {
-    fetcher: fetcher,
-    send(value) { controller.enqueue(new TextEncoder().encode(value)); },
-    bytes(value) { controller.enqueue(value); },
-    end() { controller.close(); },
-    get signal() { return signal; },
-    cancelled
-  };
+async function start(wire, options = {}) {
+  const connection = createSseConnection('/events', { eventSource: wire.eventSource, ...options });
+  await Promise.resolve();
+  wire.open();
+  return connection;
 }
 
-test('POST transport decodes split UTF-8 and delivers every identical event in a burst', async () => {
+test('wraps EventSource with credentials and defers construction for subscriptions', async () => {
   const wire = transport();
-  const opened = Promise.withResolvers      ();
-  const delivered = Promise.withResolvers      ();
   const values = [];
-  const errors = [];
-  const connection = createSseConnection('/api/events', { fetch: wire.fetcher, onopen: () => opened.resolve(), onerror: (error) => errors.push(error) });
-  connection.subscribe('notify', (value) => { values.push(value); if (values.length === 3) delivered.resolve(); });
-  await opened.promise;
-  const bytes = new TextEncoder().encode('event: notify\ndata: {"title":"piñata"}\n\nevent: notify\ndata: {"title":"same"}\n\nevent: notify\ndata: {"title":"same"}\n\n');
-  for (const byte of bytes) wire.bytes(new Uint8Array([byte]));
-  await delivered.promise;
-  expect(values).toEqual([{ title: 'piñata' }, { title: 'same' }, { title: 'same' }]);
-  expect(errors).toEqual([]);
+  const connection = createSseConnection('/events', { eventSource: wire.eventSource, withCredentials: true });
+  expect(wire.sources).toHaveLength(0);
+  connection.subscribe('notice', value => values.push(value));
+  await Promise.resolve();
+  expect(wire.source.url).toBe('/events');
+  expect(wire.source.options).toEqual({ withCredentials: true });
+  wire.open();
+  wire.send('notice', '{"title":"piñata"}');
+  wire.send('notice', '1');
+  wire.send('notice', '1');
+  expect(values).toEqual([{ title: 'piñata' }, 1, 1]);
   connection.close();
 });
 
-test('close aborts a pending read and cancels the reader without reconnect callbacks', async () => {
+test('close suppresses recovery, releases native listeners and fences stale events', async () => {
   const wire = transport();
-  const opened = Promise.withResolvers      ();
-  const closed = mock(() => {});
-  const connection = createSseConnection('/api/events', { fetch: wire.fetcher, onopen: () => opened.resolve(), onclose: closed });
-  await opened.promise;
+  const ended = mock(() => {});
+  const received = mock(() => {});
+  const connection = await start(wire, { onclose: ended });
+  connection.subscribe('notice', received);
   connection.close();
-  expect(wire.signal.aborted).toBe(true);
-  await Bun.sleep(0);
-  expect(wire.cancelled).toHaveBeenCalledTimes(1);
-  expect(closed).not.toHaveBeenCalled();
-});
-
-test('unsubscribe and throwing callbacks do not lose remaining subscribers or future events', async () => {
-  const wire = transport();
-  const opened = Promise.withResolvers      ();
-  const received = Promise.withResolvers      ();
-  const errors = mock(() => {});
-  const stale = mock(() => {});
-  const connection = createSseConnection('/api/events', { fetch: wire.fetcher, onopen: () => opened.resolve(), onerror: errors });
-  connection.subscribe('changed', () => { throw new Error('listener failed'); });
-  const stop = connection.subscribe('changed', stale);
-  stop();
-  connection.subscribe('changed', (value) => { if (value === 2) received.resolve(); });
-  await opened.promise;
-  wire.send('event: changed\ndata: 1\n\nevent: changed\ndata: 2\n\n');
-  await received.promise;
-  expect(stale).not.toHaveBeenCalled();
-  expect(errors).toHaveBeenCalledTimes(2);
   connection.close();
-});
-
-test('normal completion offers one explicit reconnect, never overlapping requests', async () => {
-  const wire = transport();
-  const opened = Promise.withResolvers      ();
-  const ended = Promise.withResolvers                     ();
-  const connection = createSseConnection('/api/events', {
-    fetch: wire.fetcher,
-    onopen: () => opened.resolve(),
-    onclose: ({ connect }) => ended.resolve(connect)
-  });
-  await opened.promise;
+  wire.send('notice', '{}');
   wire.end();
-  const connect = await ended.promise;
-  const first = connect();
-  const second = connect();
-  expect(first).toBe(second);
+  expect(connection.closed).toBe(true);
+  expect(wire.source.closeCalls).toBe(1);
+  expect(received).not.toHaveBeenCalled();
+  expect(ended).not.toHaveBeenCalled();
+});
+
+test('errors close native retry and offer deduplicated explicit reconnect', async () => {
+  const wire = transport();
+  let reconnect;
+  let ended = 0;
+  const errors = [];
+  const values = [];
+  const connection = await start(wire, { onerror: cause => errors.push(cause), onclose: ({ connect }) => { ended++; reconnect = connect; } });
+  connection.subscribe('notice', value => values.push(value));
+  const old = wire.source;
+  wire.end();
+  wire.end();
+  expect(old.closed).toBe(true);
+  expect(errors).toHaveLength(1);
+  expect(ended).toBe(1);
+  const first = reconnect();
+  expect(reconnect()).toBe(first);
+  await Promise.resolve();
+  expect(wire.sources).toHaveLength(2);
+  old.dispatchEvent(new MessageEvent('notice', { data: '0' }));
+  wire.open();
+  wire.send('notice', '1');
+  expect(values).toEqual([1]);
   connection.close();
   await first;
 });
 
-test('HTTP and non-SSE responses fail before onopen and offer recovery once', async () => {
-  for (const response of [new Response('Denied', { status: 401 }), new Response('<html>login</html>', { headers: { 'content-type': 'text/html' } })]) {
-    const ended = Promise.withResolvers      ();
-    const opened = mock(() => {});
-    const errors = mock(() => {});
-    const connection = createSseConnection('/api/events', {
-      fetch: (async (_url, init) => {
-        expect(init?.method).toBe('POST');
-        expect(new Headers(init?.headers).get('accept')).toBe('text/event-stream');
-        expect(init?.cache).toBe('no-store');
-        return response;
-      }),
-      onopen: opened,
-      onerror: errors,
-      onclose: () => ended.resolve()
-    });
-    await ended.promise;
-    expect(opened).not.toHaveBeenCalled();
-    expect(errors).toHaveBeenCalledTimes(1);
-    connection.close();
-  }
+test('decode is configurable and receives native event metadata', async () => {
+  const wire = transport();
+  const values = [];
+  const connection = await start(wire, { decode: (data, event) => [event.type, data] });
+  connection.subscribe('notice', value => values.push(value));
+  wire.send('notice', 'plain text');
+  expect(values).toEqual([['notice', 'plain text']]);
+  connection.close();
 });
 
-test('network failures offer recovery once and early close prevents a request', async () => {
-  const ended = Promise.withResolvers      ();
-  const errors = mock(() => {});
-  const fetcher = mock(async () => { throw new TypeError('Network unavailable'); });
-  const connection = createSseConnection('/api/events', { fetch: fetcher, onerror: errors, onclose: () => ended.resolve() });
-  await ended.promise;
-  expect(errors).toHaveBeenCalledTimes(1);
-  expect(fetcher).toHaveBeenCalledTimes(1);
-  connection.close();
-  const never = mock(async () => new Response());
-  createSseConnection('/api/events', { fetch: never                            }).close();
+test('JSON and sync/async observer failures are isolated from sibling delivery', async () => {
+  const wire = transport();
+  const errors = [];
+  const values = [];
+  const connection = await start(wire, { onerror: cause => errors.push(cause), async onopen() { throw Error('open'); } });
+  connection.subscribe('notice', () => { throw Error('listener'); });
+  connection.subscribe('notice', async () => { throw Error('async listener'); });
+  connection.subscribe('notice', value => values.push(value));
+  wire.send('notice', 'invalid');
+  wire.send('notice', '1');
   await Bun.sleep(0);
-  expect(never).not.toHaveBeenCalled();
-});
-
-test('a stalled transport times out, cancels its reader, and offers recovery', async () => {
-  const wire = transport();
-  const ended = Promise.withResolvers      ();
-  const connection = createSseConnection('/api/events', { fetch: wire.fetcher, idleTimeoutMs: 10, onclose: () => ended.resolve() });
-  await ended.promise;
-  expect(wire.signal.aborted).toBe(true);
-  expect(wire.cancelled).toHaveBeenCalledTimes(1);
+  expect(values).toEqual([1]);
+  expect(errors.map(error => error.message)).toContain('open');
+  expect(errors.map(error => error.message)).toContain('listener');
+  expect(errors.map(error => error.message)).toContain('async listener');
+  expect(errors.some(error => error instanceof SyntaxError)).toBe(true);
   connection.close();
 });
 
-test('closing from an event callback fences later frames in the same chunk', async () => {
+test('observer errors cannot interrupt native cleanup or retry notification', async () => {
   const wire = transport();
-  const opened = Promise.withResolvers      ();
-  const revoked = Promise.withResolvers      ();
-  const late = mock(() => {});
-  const connection = createSseConnection('/api/events', { fetch: wire.fetcher, onopen: () => opened.resolve() });
-  connection.subscribe('auth:revoked', () => { connection.close(); revoked.resolve(); });
-  connection.subscribe('notify', late);
-  await opened.promise;
-  wire.send('event: auth:revoked\ndata: {}\n\nevent: notify\ndata: {"title":"late"}\n\n');
-  await revoked.promise;
-  expect(late).not.toHaveBeenCalled();
-});
-
-test('a throwing close observer is reported without an unhandled rejection', async () => {
-  const wire = transport();
-  const opened = Promise.withResolvers      ();
-  const reported = Promise.withResolvers         ();
-  const failure = new Error('close observer failed');
-  const connection = createSseConnection('/events', {
-    fetch: wire.fetcher,
-    onopen: () => opened.resolve(),
-    onclose: () => { throw failure; },
-    onerror: (cause) => reported.resolve(cause)
-  });
-  await opened.promise;
-  wire.end();
-  expect(await reported.promise).toBe(failure);
-  connection.close();
-});
-
-test('an error observer failure cannot terminate sibling event delivery', async () => {
-  const wire = transport();
-  const opened = Promise.withResolvers      ();
-  const delivered = Promise.withResolvers      ();
   const diagnostic = spyOn(console, 'error').mockImplementation(() => {});
-  const connection = createSseConnection('/events', {
-    fetch: wire.fetcher,
-    onopen: () => opened.resolve(),
-    onerror: () => { throw new Error('error observer failed'); }
-  });
+  const ended = mock(() => { throw Error('close'); });
+  const connection = await start(wire, { onerror() { throw Error('error observer'); }, onclose: ended });
   try {
-    connection.subscribe('message', () => { throw new Error('listener failed'); });
-    connection.subscribe('message', () => delivered.resolve());
-    await opened.promise;
-    wire.send('data: {}\n\n');
-    await delivered.promise;
-    expect(diagnostic).toHaveBeenCalledTimes(1);
+    wire.end();
+    expect(wire.source.closed).toBe(true);
+    expect(ended).toHaveBeenCalledTimes(1);
+    expect(diagnostic).toHaveBeenCalledTimes(2);
   } finally { connection.close(); diagnostic.mockRestore(); }
 });
 
-test('async open and event callback failures reach onerror while siblings continue', async () => {
+test('close from a listener prevents sibling delivery', async () => {
   const wire = transport();
-  const opened = Promise.withResolvers      ();
-  const delivered = Promise.withResolvers      ();
-  const reported = Promise.withResolvers      ();
-  const errors = [];
-  const openError = new Error('async open failed');
-  const listenerError = new Error('async listener failed');
-  const connection = createSseConnection('/events', {
-    fetch: wire.fetcher,
-    async onopen() { opened.resolve(); throw openError; },
-    onerror(cause) { errors.push(cause); if (errors.length === 2) reported.resolve(); }
-  });
-  connection.subscribe('message', async () => { throw listenerError; });
-  connection.subscribe('message', () => delivered.resolve());
+  const connection = await start(wire);
+  const late = mock(() => {});
+  connection.subscribe('notice', () => connection.close());
+  connection.subscribe('notice', late);
+  wire.send('notice', '{}');
+  expect(late).not.toHaveBeenCalled();
+});
+
+test('constructor failure can recover and early close prevents construction', async () => {
+  let attempts = 0;
+  let reconnect;
+  class Broken { constructor() { attempts++; throw Error('constructor'); } }
+  const connection = createSseConnection('/events', { eventSource: Broken, onclose: ({ connect }) => { reconnect = connect; } });
+  await Bun.sleep(0);
+  await reconnect();
+  expect(attempts).toBe(2);
+  connection.close();
+  createSseConnection('/events', { eventSource: Broken }).close();
+  await Bun.sleep(0);
+  expect(attempts).toBe(2);
+});
+
+test('custom heartbeat keeps idle connection alive without application subscriptions', async () => {
+  const wire = transport();
+  const ended = mock(() => {});
+  const connection = await start(wire, { heartbeatEvent: 'alive', idleTimeoutMs: 100, onclose: ended });
   try {
-    await opened.promise;
-    wire.send('data: {}\n\n');
-    await Promise.all([delivered.promise, reported.promise]);
-    expect(errors).toEqual([openError, listenerError]);
+    for (let i = 0; i < 4; i++) { await Bun.sleep(35); wire.send('alive', ''); }
+    expect(ended).not.toHaveBeenCalled();
+    await Bun.sleep(130);
+    expect(ended).toHaveBeenCalledTimes(1);
+    expect(wire.source.closed).toBe(true);
   } finally { connection.close(); }
+});
+
+test('idle timeout can be disabled', async () => {
+  const wire = transport();
+  const ended = mock(() => {});
+  const timer = spyOn(globalThis, 'setTimeout');
+  const connection = await start(wire, { idleTimeoutMs: 0, onclose: ended });
+  try { expect(timer).not.toHaveBeenCalled(); }
+  finally { connection.close(); timer.mockRestore(); }
+});
+
+test('constructor overrides can dispatch message events from another realm', async () => {
+  const wire = transport();
+  const values = [];
+  const errors = [];
+  let opens = 0;
+  const connection = await start(wire, { onerror: cause => errors.push(cause), onopen: () => opens++ });
+  for (const name of ['notice', 'open', 'error']) {
+    connection.subscribe(name, value => values.push(value));
+    // Models a different Window's MessageEvent, which fails instanceof in this realm.
+    const event = new Event(name);
+    Object.defineProperty(event, 'data', { value: '1' });
+    wire.source.dispatchEvent(event);
+  }
+  expect(values).toEqual([1, 1, 1]);
+  expect(errors).toEqual([]);
+  expect(opens).toBe(1);
+  expect(wire.source.closed).toBe(false);
+  connection.close();
 });

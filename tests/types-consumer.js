@@ -43,7 +43,16 @@ createSseParser((/** @type {{ data: number }} */ message) => message.data);
 produce(controls => { controls.emit('tick', 123); });
 
 /** @type {SseConnectionOptions} */
-const options = { idleTimeoutMs: 75_000 };
+const options = {
+  idleTimeoutMs: 75_000,
+  eventSource: EventSource,
+  withCredentials: true,
+  heartbeatEvent: 'ping',
+  decode: (data, event) => ({ data, id: event.lastEventId })
+};
+/** @type {SseConnectionOptions} */
+// @ts-expect-error Native transport does not accept a fetch override.
+const removedFetch = { fetch };
 /** @type {SseConnection} */
 const connection = createSseConnection('/events', options);
 /** @type {() => void} */

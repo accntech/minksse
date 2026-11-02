@@ -1,7 +1,7 @@
 {
   "name": "minksse",
   "version": "0.1.0",
-  "description": "Dependency-free Server-Sent Events transport with an explicitly owned POST client, streaming parser, and Web Response producer.",
+  "description": "Dependency-free Server-Sent Events toolkit with a configurable native EventSource wrapper, streaming parser, and Web Response producer.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -43,7 +43,7 @@
     "bench:compare": "npm run build && npm --prefix benchmarks run bench --",
     "prepack": "npm run build",
     "test": "bun run docs:build && bun test ./tests/",
-    "test:transport": "bun run build && bun test tests/client.test.js tests/server.test.js tests/producer-demand.test.js tests/coalescing.test.js tests/batch.test.js tests/batch-budget.test.js tests/performance-framing.test.js tests/producer-capabilities.test.js tests/node-capabilities.test.js tests/node-counter.test.js tests/native-queue.test.js tests/native-batch.test.js tests/native-ready.test.js tests/native-owned-output.test.js tests/native-transfer.test.js tests/node-adapter.test.js tests/resources.test.js tests/standalone.test.js tests/package.test.js",
+    "test:transport": "bun run build && bun test tests/client.test.js tests/client-performance.test.js tests/native-client.test.js tests/server.test.js tests/producer-demand.test.js tests/coalescing.test.js tests/batch.test.js tests/batch-budget.test.js tests/performance-framing.test.js tests/producer-capabilities.test.js tests/node-capabilities.test.js tests/node-counter.test.js tests/native-queue.test.js tests/native-batch.test.js tests/native-ready.test.js tests/native-owned-output.test.js tests/native-transfer.test.js tests/node-adapter.test.js tests/resources.test.js tests/standalone.test.js tests/package.test.js",
     "docs:build": "bun run build && node docs/site/build.mjs",
     "docs:preview": "node docs/site/serve.mjs",
     "test:docs": "bun run docs:build && bun test tests/docs.test.js"
