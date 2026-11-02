@@ -48,7 +48,7 @@ test('summarizes actual samples with median and a mean confidence interval', () 
   const optimized = core.parseOptions([]);
   assert.equal(core.resolveSetup(optimized, 'hono').bridge, 'hono-node');
   assert.equal(core.resolveSetup(optimized, 'sveltekit-sse').bridge, 'kit');
-  assert.equal(core.resolveSetup(optimized, 'minksse').bridge, 'minksse-node');
+  assert.equal(core.resolveSetup(optimized, 'minksse').bridge, 'direct');
   assert.equal(core.resolveSetup(optimized, 'better-sse').better, 'batch');
   assert.equal(core.resolveSetup(optimized, 'native').cork, 'off');
   assert.equal(core.resolveSetup(optimized, 'native').native, 'batch');
@@ -68,7 +68,7 @@ test('MinkSSE coalescing is explicit, bounded and reproducible', () => {
   assert.equal(core.resolveSetup(core.parseOptions(['--setup=baseline']), 'minksse').coalesceBytes, 0);
   assert.equal(core.resolveSetup(core.parseOptions(['--coalesce=0']), 'minksse').coalesceBytes, 0);
   assert.equal(core.resolveSetup(core.parseOptions(['--coalesce=4096']), 'minksse').coalesceBytes, 4096);
-  assert.equal(core.parseOptions(['--bridge=minksse-node']).bridge, 'minksse-node');
+  assert.throws(() => core.parseOptions(['--bridge=minksse-node']), /bridge/);
   for (const value of ['-1', '1.5', '262145', 'NaN']) {
     assert.throws(() => core.parseOptions([`--coalesce=${value}`]), /coalesce/);
   }
@@ -130,4 +130,37 @@ test('multiline serialization includes mixed line endings and remains valid JSON
       assert.deepEqual(JSON.parse(serialized.replace(/\r\n|\r|\n/g, '\n')), { sequence: 42, payload });
     } else assert.equal(serialized, JSON.stringify({ sequence: 42, payload }));
   }
+});
+
+test('wire validation rejects the captured sveltekit mixed-CR data loss', () => {
+  const wire = 'id: 1\nevent: message\ndata: {\r\ndata:   "sequence": 0,\r  "payload": "xxxx"\ndata: }\n\n';
+  const bytes = new TextEncoder().encode(wire);
+  for (let boundary = 0; boundary <= bytes.length; boundary++) {
+    const validator = core.createValidator(1, 'xxxx');
+    assert.throws(() => {
+      validator.push(bytes.subarray(0, boundary));
+      validator.push(new Uint8Array());
+      validator.push(bytes.subarray(boundary));
+      validator.finish();
+    }, /JSON/, `lost data must fail at split ${boundary}`);
+  }
+});
+
+test('wire validation accepts CR, LF and CRLF at every UTF-8 byte boundary', () => {
+  const wire = ': comment\r\nid: 1\revent: message\ndata: {\r\ndata: "sequence":0,\rdata: "payload":"héllo🌏"\ndata: }\r\n\r\nid: 2\nevent: message\r\ndata: {"sequence":1,"payload":"héllo🌏"}\r\r';
+  const bytes = new TextEncoder().encode(wire);
+  for (let boundary = 0; boundary <= bytes.length; boundary++) {
+    const validator = core.createValidator(2, 'héllo🌏');
+    validator.push(bytes.subarray(0, boundary));
+    // Empty decoded chunks must not lose the pending-CR/skip-next-LF state.
+    validator.push(new Uint8Array());
+    validator.push(bytes.subarray(boundary));
+    assert.equal(validator.finish(), 2, `valid mixed endings at split ${boundary}`);
+  }
+  const fragmented = core.createValidator(2, 'héllo🌏');
+  for (const byte of bytes) {
+    fragmented.push(Uint8Array.of(byte));
+    fragmented.push(new Uint8Array());
+  }
+  assert.equal(fragmented.finish(), 2);
 });

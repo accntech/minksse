@@ -1,0 +1,21 @@
+# SSE HTTP benchmark results
+
+Generated 2026-11-02T06:18:59.180Z. Setup: **optimized**, effective strategies {"native":{"bridge":"direct","fastify":"send","better":"batch","cork":"off","native":"batch","minkApi":"batch","coalesceBytes":16384},"hono":{"bridge":"hono-node","fastify":"send","better":"batch","cork":"off","native":"batch","minkApi":"batch","coalesceBytes":16384},"minksse":{"bridge":"direct","fastify":"send","better":"batch","cork":"off","native":"batch","minkApi":"batch","coalesceBytes":16384}}. 16 concurrent clients × 20000 events; 128-byte ASCII payload per event, batch 16, interval 0 ms.
+
+6 measured repeats, 1 full warmup pass(es) per fresh server. v24.12.0, Apple M4 Pro, darwin/arm64.
+
+| Candidate | Median events/s | Mean events/s (95% CI) | Median completion ms | Median first event ms | Median per-trial p95 first event ms | Median server CPU ms | Median RSS after MiB |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| native | 1,531,045.89 | 1,497,550.31 (1,411,609.26–1,583,491.36) | 209.01 | 0.77 | 0.96 | 221.37 | 90.96 |
+| hono | 329,728.14 | 331,062.23 (326,077.77–336,046.69) | 970.53 | 1.54 | 2.09 | 1,031.76 | 260.49 |
+| minksse | 1,308,941.78 | 1,288,937.5 (1,240,379.25–1,337,495.75) | 244.47 | 1.28 | 1.62 | 267.27 | 110.56 |
+
+All recorded streams passed exact event-count, order, payload and HTTP validation. Any error aborts the run without writing a successful report.
+
+Throughput includes connection/request overhead, socket delivery and independent client validation. Both processes share this machine; client CPU and scheduler contention can cap results. Small samples and wide confidence intervals do not establish a reliable ranking. The Student-t interval describes mean throughput across these repeats, not a production guarantee.
+
+The native baseline uses Node HTTP writes. Hono includes its router; Fastify includes its router and plugin. Hono, sveltekit-sse and MinkSSE use the selected per-candidate Web Response → Node HTTP adapter (effective strategies above). sveltekit-sse uses its real published producer bundled by esbuild; SvelteKit routing and the package clients are outside this measurement. Native/Hono/Fastify await exposed write backpressure; producer APIs cannot be made identical in that respect. See README.md for scope and reproducibility.
+
+Package versions: @hono/node-server 2.1.5, hono 4.13.16, fastify 5.12.7, @fastify/sse 0.6.1, better-sse 0.16.1, sveltekit-sse 0.15.1, svelte 5.57.3, @sveltejs/kit 2.70.3, esbuild 0.28.2.
+
+Raw samples and environment: tuned-web-all-multiline-2026-11-02.json. Local MinkSSE source commit 59e781d027a0d27bb93540b7c8125406feeae078; dirty checkout: true. The JSON includes the local compiled server and dependency lock hashes.

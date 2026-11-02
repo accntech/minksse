@@ -17,7 +17,7 @@ export function parseOptions(args) {
       }
     }
     else if (['setup', 'bridge', 'fastify', 'better', 'cork', 'native', 'minkapi', 'payload'].includes(key)) {
-      const allowed = { payload: ['ascii', 'unicode', 'multiline'], setup: ['baseline', 'optimized'], bridge: ['auto', 'pipeline', 'direct', 'hono-node', 'kit', 'minksse-node'],
+      const allowed = { payload: ['ascii', 'unicode', 'multiline'], setup: ['baseline', 'optimized'], bridge: ['auto', 'pipeline', 'direct', 'hono-node', 'kit'],
         fastify: ['auto', 'send', 'iterable', 'stream'], better: ['auto', 'push', 'batch'], cork: ['auto', 'on', 'off'], native: ['auto', 'write', 'batch'], minkapi: ['auto', 'emit', 'batch'] };
       if (!allowed[key].includes(value)) throw new Error(`Invalid ${key}: ${value}`);
       options[key] = value;
@@ -55,6 +55,7 @@ export function createValidator(expected, payload) {
   const decoder = new TextDecoder('utf-8', { fatal: true });
   let buffer = '';
   let count = 0;
+  let pendingCR = false;
   function parse() {
     let index;
     while ((index = buffer.indexOf('\n\n')) !== -1) {
@@ -82,11 +83,23 @@ export function createValidator(expected, payload) {
       count++;
     }
   }
+  function append(text) {
+    // Decoder output may be empty for an empty read or an incomplete UTF-8
+    // code point. Preserve a prior CR until an actual next character arrives.
+    if (!text.length) return;
+    if (pendingCR && text.charCodeAt(0) === 10) text = text.slice(1);
+    pendingCR = text.charCodeAt(text.length - 1) === 13;
+    // Normalize protocol line endings, including CRLF split across reads.
+    // The common LF-only path performs no replacement or additional copying.
+    if (text.includes('\r')) text = text.replace(/\r\n|\r/g, '\n');
+    buffer += text;
+    parse();
+  }
   return {
     get count() { return count; },
-    push(bytes) { buffer += decoder.decode(bytes, { stream: true }); parse(); },
+    push(bytes) { append(decoder.decode(bytes, { stream: true })); },
     finish() {
-      buffer += decoder.decode();
+      append(decoder.decode());
       parse();
       if (buffer.trim()) throw new Error('Unterminated SSE frame');
       if (count !== expected) throw new Error(`Expected ${expected} events, received ${count}`);
@@ -119,7 +132,7 @@ export function percentile(values, fraction) {
 export function resolveSetup(options, target) {
   const optimized = options.setup === 'optimized';
   const pick = (key, baseline, tuned) => options[key] && options[key] !== 'auto' ? options[key] : optimized ? tuned : baseline;
-  const preferredBridge = target === 'hono' ? 'hono-node' : target === 'sveltekit-sse' ? 'kit' : target === 'minksse' ? 'minksse-node' : 'direct';
+  const preferredBridge = target === 'hono' ? 'hono-node' : target === 'sveltekit-sse' ? 'kit' : 'direct';
   return { bridge: pick('bridge', 'pipeline', preferredBridge), fastify: pick('fastify', 'send', 'send'),
     better: pick('better', 'push', 'batch'), cork: pick('cork', 'off', 'off'), native: pick('native', 'write', 'batch'),
     minkApi: pick('minkapi', 'emit', 'batch'),

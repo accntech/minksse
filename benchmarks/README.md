@@ -53,14 +53,14 @@ npm --prefix benchmarks run bench -- --targets=minksse --profile=profiles --even
 | `targets` | Comma-separated subset: `native,hono,fastify,better-sse,sveltekit-sse,minksse` |
 | `output` | JSON path relative to the command's working directory; sibling Markdown also written |
 | `setup` | `optimized` (default) or original `baseline` setup |
-| `bridge` | Web producer transport: `auto`, `pipeline`, `direct`, `hono-node`, `kit`, or `minksse-node` |
+| `bridge` | Web producer transport: `auto`, `pipeline`, `direct`, `hono-node`, or `kit` |
 | `fastify` | `auto`, per-event `send`, `iterable`, or `stream` |
 | `better` | `auto`, per-event `push`, or public `batch` |
 | `cork` | Native output: `auto`, `on`, or `off` |
 | `native` | `auto`, per-event `write`, or one framed `batch` write |
 | `coalesce` | MinkSSE output target in bytes: `auto`, or integer 0–262,144. `auto` selects 16,384 for optimized and 0 for baseline. The library itself defaults to 0 (off). |
 | `minkapi` | `auto`, `emit`, or `batch`. Optimized auto uses public `emitBatch()`, baseline auto uses scalar `emit()`. Batch array assembly remains inside timing. |
-| `minkbuild` | Optional directory containing a different compiled `server.js` and `node.js`; actual selected source hashes are recorded. Use `--minkapi=emit` with builds predating the batch API. |
+| `minkbuild` | Optional directory containing a different compiled `server.js`; actual selected source hashes are recorded. Use `--minkapi=emit` with builds predating the batch API. |
 | `loaders` | 1 by default; up to 32 client workers, never more than clients. Workers persist through warmup and measured pass; startup is excluded. Client CPU is counted once for the entire process. |
 | `profile` | Directory for V8 CPU profiles; includes startup/warmup and uses graceful shutdown |
 
@@ -144,12 +144,14 @@ intervals and small sample counts cannot establish a reliable ranking.
   code, browser stores and the package's `source()` client. Optimized mode uses
   SvelteKit's public Node `setResponse()` writer.
 - **MinkSSE:** `produce()` from this checkout's `dist/server.js`, including its
-  queue bound. Optimized mode opts into `coalesceBytes: 16_384` and uses the
-  supported `writeSseResponse()` from `minksse/node` and public `emitBatch()` for
-  each common production batch; baseline disables
-  coalescing and retains the old pipeline. `--coalesce=0` measures the adapter
-  independently. Add `--minkapi=emit` for the prior scalar producer path.
-  SHA-256 hashes identify both compiled modules in new reports.
+  queue bound. Optimized mode opts into `coalesceBytes: 16_384`, uses public
+  `emitBatch()` for each common production batch, and forwards the returned
+  Web Response through the harness's generic reader loop with Node socket
+  backpressure. This bridge belongs to the benchmark, not the MinkSSE package.
+  Baseline disables coalescing and uses `Readable.fromWeb()` with `pipeline()`.
+  Add `--coalesce=0` or `--minkapi=emit` for uncoalesced or scalar comparisons.
+  New reports hash the compiled producer; Node adapter/private capability
+  modules are no longer required or shipped.
 
 In baseline mode Hono, sveltekit-sse and MinkSSE share the identical Web Response
 → Node HTTP adapter, implemented with `Readable.fromWeb()` and `pipeline()`.
@@ -173,15 +175,179 @@ consumers, memory leaks or maximum server capacity. First-event numbers are
 neither per-event latency nor emission-to-reception latency. RSS is whole
 process memory, not per-connection allocation.
 
+## Native client wrapper comparison
+
+The producer comparison above does **not** measure `createSseConnection()`.
+Run the separate client benchmark from the repository root with Node 24:
+
+```sh
+node --experimental-eventsource benchmarks/client-benchmark.mjs --clients=1 --output=benchmarks/results/native-client-1.json
+node --experimental-eventsource benchmarks/client-benchmark.mjs --clients=16 --output=benchmarks/results/native-client-16.json
+```
+
+It compares direct native Node `EventSource`, the current source wrapper, the
+pre-optimization native wrapper captured under `fixtures/pre-wrapper-optimization/`,
+and the unmodified former POST Fetch client under
+`fixtures/pre-eventsource-client/`. All native paths use GET. All clients
+receive identical preframed named JSON events from a separate loopback HTTP
+server. Every stream validates exact event count, JSON payload and sequence
+before a completion sentinel closes it. Failed validation or timeout aborts
+without a successful report. The server holds streams open after the sentinel,
+so automatic retries and EOF handling are outside the timed workload.
+
+Defaults: 20,000 events per client, 128-byte ASCII payload, batches of 16,
+two full warmup passes and seven measured repeats. Candidate order rotates.
+Options use `--name=value`: `clients`, `events`, `bytes`, `batch`, `warmup`,
+`repeats`, `timeout` (milliseconds), `output`. JSON includes all samples,
+source hashes and mean throughput Student-t 95% intervals; Markdown reports
+medians. Completion spans connection launch through final validated sentinel;
+client CPU excludes the separate server process. Each candidate parses JSON
+and runs the same payload/sequence validation.
+
+Node 24's implementation is experimental and needs the runtime flag; no
+polyfill is used. These observations cannot establish browser performance,
+server producer improvements, replay behavior or production capacity. The
+historical Fetch client uses POST and its own parser, so that comparison
+measures the entire client change rather than isolated wrapper overhead.
+Direct native versus wrapped native is the wrapper-overhead control. The previous
+wrapper is a same-run before/after control. Reports include percent throughput
+differences within each repeat block and their Student-t 95% mean intervals;
+an interval crossing zero does not establish an improvement or regression.
+
+## Tuned Web API producer (November 2, 2026)
+
+The producer remains pure Web APIs. Encoding now learns an ASCII/Unicode preference per response: steady ASCII uses exact-capacity `encodeInto()`, while Unicode uses one `encode()` call. The first unexpected Unicode group after ASCII can incur a partial encoding attempt before switching permanently to `encode()` for that response. No payload cache is retained. Multiline batches use a conservative wire-size bound before normalization; batches unlikely to fit take exact staging immediately. The first-member size heuristic can miss an optimization for heterogeneous batches with a large first member, without changing wire output or byte limits.
+
+The [coalescing sweep](results/coalescing-sweep-2026-11-02.md) tested 16/32/64 KiB against the same frozen source. For 1 KiB events, 64 KiB raised median throughput from 483,574 to 756,351 events/s (**56.4%**); paired mean improvement was 58.52% (95% CI 55.74–61.31%). Median first-event p95 was 1.55 versus 1.73 ms, and whole-process RSS-after was 96.12 versus 94.72 MiB. These observations do not establish memory retention or production latency. Other workloads did not support a universal 64 KiB recommendation. The public default stays **0**, and the benchmark default stays **16 KiB**.
+
+[Matched source controls at 16 KiB](results/tuned-web-final-control-16k.md) used the frozen `fixtures/pre-unicode-optimization/server.js` baseline, with 18 primary repeats and six repeats per other workload:
+
+| Workload | Before median events/s | After median events/s | Median change | Paired mean change (95% CI) |
+| --- | ---: | ---: | ---: | ---: |
+| ASCII, 16 clients | 1,625,579 | 1,649,055 | +1.44% | +1.21% (−1.62–4.03%) |
+| ASCII, 1 client | 582,547 | 575,752 | −1.17% | +3.09% (−9.88–16.06%) |
+| 1 KiB, 16 clients | 471,259 | 468,869 | −0.51% | +0.53% (−4.26–5.32%) |
+| Unicode, 16 clients | 1,053,487 | 1,205,832 | **+14.46%** | **+12.75% (7.91–17.59%)** |
+| Mixed CR/LF, 16 clients | 907,193 | 1,279,382 | **+41.03%** | **+39.46% (36.46–42.47%)** |
+
+ASCII changes are inconclusive. The [18-repeat 64 KiB large-event control](results/tuned-web-final-control-large64k.md) found no established source gain at fixed 64 KiB (paired +0.05%, CI −1.38–1.49%): its benefit comes from configuration. The [default-zero single-client batch control](results/tuned-web-default-zero-control.md) also found no established change (paired −0.03%, CI −3.92–3.87%). This does not measure every scalar/default API path. Controls totaled 198 validated trials and 35.28 million measured events. The earlier contended `unicode-selection-a` experiment remains recorded as inconclusive; no samples were silently excluded.
+
+Fresh cross-project results follow. Values are median validated events/s, Node v24.12.0 on Apple M4 Pro, macOS arm64. All use batches of 16 and a full warmup per fresh server. ASCII columns use seven repeats; others use six. Sixteen-client columns use four loader workers. **MinkSSE explicitly uses 64 KiB for the 1 KiB column and 16 KiB elsewhere**. Other integrations and the independent validator are unchanged. These are separate runs from the matched source controls above.
+
+| Project | ASCII, 1 client | ASCII, 16 clients | 1 KiB, 16 clients | Unicode, 16 clients | Mixed CR/LF, 16 clients |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Native Node HTTP | 607,606 | 1,873,650 | 786,661 | 1,396,654 | 1,531,046 |
+| MinkSSE | 564,248 | 1,661,741 | 761,475 | 1,245,703 | 1,308,942 |
+| Better SSE | 508,343 | 1,313,566 | 546,618 | 961,753 | Failed† |
+| Fastify SSE | 401,918 | 760,532 | 491,757 | 621,791 | Failed† |
+| Hono | 231,218 | 341,875 | 273,532 | 322,399 | 329,728 |
+| sveltekit-sse | 236,516 | 340,643 | 274,399 | 312,845 | Failed† |
+
+MinkSSE reached 92.9%, 88.7%, 96.8%, 89.2%, and 85.5% of native median throughput respectively. These results do not establish native parity. The 1 KiB median first-event p95 was 1.62 ms for MinkSSE versus 1.03 ms native; RSS-after was 96.23 versus 84.15 MiB. Full latency, CPU, RSS, confidence intervals, environment and raw samples are included in each report. This measures finite loopback HTTP delivery and independent client validation, with differing framework and backpressure semantics; it is not a production capacity guarantee.
+
+† Previously captured failures apply specifically to pre-serialized JSON containing raw mixed CRLF/CR/LF with identity serialization. Those three configurations were excluded from the successful mixed-newline run, not assigned zero throughput. Their ordinary compact JSON workloads passed. See [raw wire/native EventSource validation](results/mixed-newline-validation-2026-11-02.json).
+
+Full reports (adjacent JSON contains all raw samples): [single client](results/tuned-web-all-single-2026-11-02.md), [sixteen clients](results/tuned-web-all-four-loader-2026-11-02.md), [1 KiB](results/tuned-web-all-large-2026-11-02.md), [Unicode](results/tuned-web-all-unicode-2026-11-02.md), [mixed newlines](results/tuned-web-all-multiline-2026-11-02.md). All 174 measured trials and 34.44 million measured events passed validation.
+
+Validation: 206 project tests, 41 benchmark tests, type checking, browser bundling, and the same pure-Web conformance fixture under Node, Bun, and Deno passed. Coverage includes Unicode/surrogates, CR/LF/CRLF, encoding fallback, transferred output buffers, immediate first output, blocked-consumer byte limits and cleanup.
+
+Reproduce sequentially from the repository root after building and installing benchmark dependencies:
+
+```sh
+BUILD=benchmarks/fixtures/pre-unicode-optimization OUTPUT=benchmarks/results/coalescing-sweep.json node benchmarks/experiments/coalescing-sweep.mjs
+BEFORE_BUILD=benchmarks/fixtures/pre-unicode-optimization COALESCE=16384 OUTPUT=benchmarks/results/tuned-control.json node --conditions=svelte benchmarks/experiments/portable-performance.mjs
+CASES=large REPEATS=18 BEFORE_BUILD=benchmarks/fixtures/pre-unicode-optimization COALESCE=65536 OUTPUT=benchmarks/results/tuned-large64k.json node --conditions=svelte benchmarks/experiments/portable-performance.mjs
+CASES=single REPEATS=6 BEFORE_BUILD=benchmarks/fixtures/pre-unicode-optimization COALESCE=0 OUTPUT=benchmarks/results/tuned-zero.json node --conditions=svelte benchmarks/experiments/portable-performance.mjs
+npm --prefix benchmarks run bench -- --loaders=1 --clients=1 --events=20000 --repeats=7 --coalesce=16384 --output=results/tuned-single.json
+npm --prefix benchmarks run bench -- --loaders=4 --clients=16 --events=20000 --repeats=7 --coalesce=16384 --output=results/tuned-four-loader.json
+npm --prefix benchmarks run bench -- --loaders=4 --clients=16 --events=5000 --bytes=1024 --repeats=6 --coalesce=65536 --output=results/tuned-large.json
+npm --prefix benchmarks run bench -- --loaders=4 --clients=16 --events=20000 --payload=unicode --repeats=6 --coalesce=16384 --output=results/tuned-unicode.json
+npm --prefix benchmarks run bench -- --loaders=4 --clients=16 --events=20000 --payload=multiline --repeats=6 --coalesce=16384 --targets=native,hono,minksse --output=results/tuned-multiline.json
+node tests/fixtures/portable-runtime-check.mjs
+bun tests/fixtures/portable-runtime-check.mjs
+deno run --quiet tests/fixtures/portable-runtime-check.mjs
+```
+
+The sweep command above reproduces the frozen pre-Unicode source selection directly; it intentionally uses that snapshot rather than the current build. Selection reports `unicode-selection-*`, `multiline-selection-c` and `eligibility-selection-d` are exploratory; final acceptance uses the matched controls above. Historical controls follow for provenance.
+
+## Cross-project comparison with the optimized portable producer
+
+Fresh Node v24.12.0 loopback runs on Apple M4 Pro, macOS arm64. Values are median validated events/s. These use the optimized portable build and a corrected independent CR/LF/CRLF validator. They are a separate experiment from the preceding three-way optimization control.
+
+| Project | 1 client | 16 clients | 1 KiB | Unicode | Mixed CR/LF |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Native Node HTTP | 590,155 | 1,801,866 | 757,394 | 1,343,377 | 1,480,023 |
+| MinkSSE | 557,104 | 1,596,428 | 479,070 | 1,027,448 | 896,509 |
+| Better SSE | 504,156 | 1,269,965 | 537,880 | 972,853 | Failed validation† |
+| Fastify SSE | 395,838 | 778,428 | 483,400 | 630,702 | Failed validation† |
+| Hono | 233,939 | 332,926 | 271,125 | 315,857 | 323,804 |
+| sveltekit-sse | 239,667 | 325,607 | 270,407 | 315,925 | Failed validation† |
+
+All columns except single use sixteen connections and four client workers. Single and primary ASCII use seven repeats; held-out cases use six. Each fresh server gets one full warmup. Batch size is sixteen; the payload is 128 raw UTF-8 bytes except the 1 KiB case. Each connection receives 20,000 events, or 5,000 in the 1 KiB case. MinkSSE uses the generic direct Web reader bridge, public batch API and opt-in 16 KiB coalescing. Other projects retain their selected public integrations.
+
+Published valid results comprise **174 measured trials and 34,440,000 events**. No speed is assigned to a setup that fails delivery validation. Package versions are pinned: Hono 4.13.16 / Node adapter 2.1.5, Fastify 5.12.7 / @fastify/sse 0.6.1, Better SSE 0.16.1, and sveltekit-sse 0.15.1.
+
+† The mixed-newline column uses pre-serialized JSON containing CRLF, standalone CR and LF, with identity serialization where applicable. Better SSE, Fastify SSE and sveltekit-sse failed payload delivery under this configuration. Raw captures and independent native EventSource decoding confirm the failures. This does not mean their ordinary compact JSON workloads failed. See [failure evidence](results/mixed-newline-validation-2026-11-02.json), [initial failed run](results/mixed-newline-failed-run-2026-11-02.log), and [strict-validation failed smoke](results/mixed-newline-valid-smoke-failed-2026-11-02.log).
+
+The former LF-only validator could falsely accept standalone-CR corruption from Fastify and sveltekit-sse. It now handles CRLF, CR and LF incrementally, including CRLF split across chunks and empty decoder output, following the [SSE line-ending rules](https://html.spec.whatwg.org/multipage/server-sent-events.html#parsing-an-event-stream). Regression tests failed before the fix and pass now; all 38 benchmark tests pass. All five columns above were rerun with the corrected scorer. The old scorer is preserved at `fixtures/pre-cr-validator/core.mjs` for source-hash auditing. Earlier native/MinkSSE-only controls used correctly LF-normalized wire and remain valid; their recorded scores used that earlier scorer version.
+
+Raw samples, versions, effective settings, CPU/RSS/first-event summaries and confidence intervals are in the JSON beside each readable report:
+
+- 1 client: [report](results/portable-optimized-all-single-2026-11-02.md) · [raw samples](results/portable-optimized-all-single-2026-11-02.json)
+- 16 clients: [report](results/portable-optimized-all-four-loader-2026-11-02.md) · [raw samples](results/portable-optimized-all-four-loader-2026-11-02.json)
+- 1 KiB: [report](results/portable-optimized-all-large-2026-11-02.md) · [raw samples](results/portable-optimized-all-large-2026-11-02.json)
+- Unicode: [report](results/portable-optimized-all-unicode-2026-11-02.md) · [raw samples](results/portable-optimized-all-unicode-2026-11-02.json)
+- Mixed CR/LF: [report](results/portable-optimized-all-multiline-2026-11-02.md) · [raw samples](results/portable-optimized-all-multiline-2026-11-02.json)
+
+Native retains the highest median in every workload. MinkSSE has the highest packaged-library median for the ASCII and Unicode cases; Better SSE leads the 1 KiB case. Unicode confidence intervals overlap widely between MinkSSE and Better SSE, so there is no clear winner there; the 1 KiB MinkSSE/Fastify intervals also overlap. Overlap with native in a small all-project run does not establish parity. The selected router/adapter/queue behavior differs among projects, and logical events rather than byte-for-byte framing are compared across libraries. These are finite Node loopback observations, not browser results or production capacity guarantees.
+
 ## Recorded runs
 
-- **Latest optimization and all-project comparison:** [Owned native output](OWNED-OUTPUT-OPTIMIZATION-2026-11-02.md), with an 18-repeat before/after control, profiles, ownership/queue safety checks and fresh results for all six implementations.
+**Earlier portable producer optimization:** [controlled results](results/portable-final-control.md) and [raw samples](results/portable-final-control.json). The fixed native, frozen generic baseline, and optimized generic producer rotate within each repeat. Primary uses eighteen repeats; single-client, 1 KiB, Unicode, and multiline workloads use six each. All 126 samples and 30.6 million measured events passed exact wire/count/order/payload validation.
+
+| Workload | Before events/s | Optimized events/s | Native events/s | Gain | Optimized/native |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Sixteen clients / four workers | 1,372,808 | 1,675,647 | 1,873,879 | +22.1% | 89.4% |
+| One client | 510,896 | 584,631 | 609,754 | +14.4% | 95.9% |
+
+**The native target was not reached.** All five paired native comparisons have strictly negative 95% intervals. The 1 KiB result is inconclusive versus baseline; other held-out gains are reported in the linked tables. These are measured improvements, not a native-parity claim.
+
+The retained code specializes batch staging, proves a conservative UTF-8 bound before skipping per-member counting, encodes only after every value/getter validates, uses owned ASCII `encodeInto` output with Unicode/API fallback, and avoids idle-pull/default-header setup work. Exact byte-limit and newline paths remain for batches that cannot prove the bound. No Node imports, adapter, private transport hooks, changed public defaults, global payload cache, or altered native control were introduced.
+
+The frozen baseline is `fixtures/pre-portable-performance/server.js`. It is raw source; compiling with the existing ES2022/NodeNext/removeComments/sourceMap build settings reproduces the original generic benchmark compiled SHA-256 `62ecc4c6630dce8b420ca449b030ae70d134a393741f60061a9b0e316d81e5a4`. Raw and compiled hashes therefore intentionally differ. Benchmark provenance and calculations were independently verified.
+
+Reproduce from the repository root, without concurrent test/profile loads:
+
+```sh
+bun run build
+OUTPUT=benchmarks/results/portable-final-control.json node --conditions=svelte benchmarks/experiments/portable-performance.mjs
+```
+
+The runner also supports `CASES=primary,single,large,unicode,multiline` and `REPEATS=<positive integer>`; default repeat counts above apply when `REPEATS` is omitted. Timing selections `portable-selection-1` through `portable-selection-4` are exploratory, not acceptance scores. Slower byte-assembly and join-layout variants were rejected and are not part of the final source.
+
+**Generic baseline after adapter removal (November 2, 2026):** [one client](results/generic-all-single-2026-11-02.md) and [sixteen clients / four workers](results/generic-all-four-loader-2026-11-02.md), with adjacent raw JSON. Seven repeats per project, 20,000 events per connection, 128-byte payloads, batch sixteen, and one full warmup per trial. MinkSSE uses the generic direct reader with opt-in 16 KiB coalescing; other projects retain their selected integrations.
+
+MinkSSE measured 510,211 events/s at one client and 1,359,479 at sixteen. This is 5.77% and 19.11% lower than the immediately preceding adapter-based runs. It is effectively tied with Better SSE in both workloads (overlapping confidence intervals). All 84 measured samples passed validation, totaling 14.28 million events. Source hashes and calculations were independently verified. These are Node-hosted loopback measurements of the portable producer, not cross-runtime performance guarantees.
+
+Earlier server reports predating the generic-streaming removal retain their original results,
+source hashes, options and adapter names as historical evidence. Their optimized
+MinkSSE path used the now-removed Node adapter and private producer hooks; they
+do not describe the current generic Web streaming path. The current harness
+rejects `--bridge=minksse-node` and records schema version 5 without removed-module
+hash fields. Historical optimization experiment scripts under `experiments/`
+remain snapshots of those earlier investigations and may require their frozen
+builds or historical harness revision.
+
+- **Latest client wrapper optimization:** [Native wrapper overhead](NATIVE-CLIENT-OPTIMIZATION-2026-11-02.md), with same-run previous-wrapper/native controls, twenty repeats, delivery-path diagnostics and raw results.
+
+- **Native client wrapper:** [November 2 client validation](NATIVE-CLIENT-WRAPPER-2026-11-02.md), with direct native EventSource and historical Fetch controls at one and sixteen clients. This measures clients separately from the producer comparisons below.
+- **Historical Node adapter optimization and all-project comparison:** [Owned native output](OWNED-OUTPUT-OPTIMIZATION-2026-11-02.md), with an 18-repeat before/after control, profiles, ownership/queue safety checks and fresh results for all six implementations.
 - [Earlier four-loader hot path](FOUR-LOADER-HOTPATH-2026-11-02.md), including the preceding batch-loop/callback-writer pass.
 - [Earlier native queue allocation pass](NATIVE-QUEUE-OPTIMIZATION-2026-11-02.md), including controlled before/after results and verification.
 - [Earlier November 2 all-project run](FRESH-COMPARISON-2026-11-02.md), using the preceding Node queue build.
 - [Four-loader optimization report](FOUR-LOADER-OPTIMIZATION.md), with native UTF-8 counting, repeated controls and held-out payloads.
 - [Previous native-gap report](NATIVE-PERFORMANCE.md), including explicit batch/scalar results and client-CPU controls.
-- Latest all-package results: [one client](results/native-pass-clients-1.md), [16 clients / one loader](results/native-pass-clients-16.md), [16 clients / four loaders](results/native-pass-parallel.md), [1 KiB](results/native-pass-large.md), [sparse](results/native-pass-sparse.md).
+- Earlier all-package results: [one client](results/native-pass-clients-1.md), [16 clients / one loader](results/native-pass-clients-16.md), [16 clients / four loaders](results/native-pass-parallel.md), [1 KiB](results/native-pass-large.md), [sparse](results/native-pass-sparse.md).
 - [Implemented features and rerun analysis](IMPLEMENTATION.md): Node adapter, opt-in coalescing, fresh all-package results and isolated ablations.
 - Implemented optimized results: [one client](results/implemented-clients-1.md), [sixteen clients](results/implemented-clients-16.md), [1 KiB](results/implemented-large-payload.md), and [sparse](results/implemented-sparse.md).
 - Original run: [one client](results/clients-1.md) and [sixteen clients](results/clients-16.md).

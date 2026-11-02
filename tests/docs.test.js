@@ -83,9 +83,16 @@ test('the quick-start client connects before explicit disposal', async () => {
   const fixture = `
     import assert from 'node:assert/strict';
     let requests = 0;
-    globalThis.fetch = async () => {
-      requests++;
-      return new Response('event: tick\\ndata: {"time":123}\\n\\n', { headers: { 'Content-Type': 'text/event-stream' } });
+    globalThis.EventSource = class extends EventTarget {
+      constructor() {
+        super();
+        requests++;
+        queueMicrotask(() => {
+          this.dispatchEvent(new Event('open'));
+          this.dispatchEvent(new MessageEvent('tick', { data: '{"time":123}' }));
+        });
+      }
+      close() {}
     };
     ${source}
     await new Promise(resolve => setTimeout(resolve, 10));

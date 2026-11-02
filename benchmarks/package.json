@@ -8,6 +8,7 @@
   "scripts": {
     "test": "node --conditions=svelte --test test/*.test.mjs",
     "bench": "node --conditions=svelte run.mjs",
+    "bench:client": "node --experimental-eventsource client-benchmark.mjs",
     "smoke": "node --conditions=svelte run.mjs --events=100 --clients=2 --warmup=1 --repeats=1 --output=results/smoke.json"
   },
   "dependencies": {

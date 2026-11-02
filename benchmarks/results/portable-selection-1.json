@@ -1,0 +1,772 @@
+{
+  "schemaVersion": 1,
+  "status": "complete",
+  "createdAt": "2026-11-02T02:57:58.401Z",
+  "environment": {
+    "node": "v24.12.0",
+    "v8": "13.6.233.17-node.37",
+    "cpu": "Apple M4 Pro",
+    "os": "darwin",
+    "arch": "arm64",
+    "release": "27.2.0"
+  },
+  "commit": "59e781d027a0d27bb93540b7c8125406feeae078",
+  "dirty": true,
+  "methodology": "Fixed native/before-generic/after-generic candidates rotate within each repeat, and workload order rotates between repeat blocks. Current unmodified benchmark harness/native target/scoring; generic direct Web bridge. Fresh server and loader pool; one complete warmup. Exact HTTP status, event name, ID, payload, sequence, count and wire-byte equivalence checks. Sequential trials, no automatic retries or exclusions. Throughput includes request/socket delivery and independent client validation; startup and warmup are excluded.",
+  "base": {
+    "events": 20000,
+    "clients": 16,
+    "bytes": 128,
+    "batch": 16,
+    "interval": 0,
+    "repeats": 1,
+    "warmup": 1,
+    "timeout": 30000,
+    "loaders": 4,
+    "payload": "ascii",
+    "targets": [
+      "native",
+      "minksse"
+    ],
+    "output": "results/latest.json",
+    "setup": "optimized",
+    "bridge": "direct",
+    "fastify": "auto",
+    "better": "auto",
+    "cork": "auto",
+    "native": "auto",
+    "minkapi": "auto",
+    "coalesce": "auto",
+    "profile": "",
+    "minkbuild": ""
+  },
+  "workloads": {
+    "primary": {}
+  },
+  "repeats": {
+    "primary": 3
+  },
+  "builds": {
+    "before-generic": "/Users/ogie/WebProjects/minksse/benchmarks/fixtures/pre-portable-performance/",
+    "after-generic": "/Users/ogie/WebProjects/minksse/dist/"
+  },
+  "hashes": {
+    "beforeServer": "04c09248762b9d9bc5389d2c02887c51e8cee878605a1235f47a9dc2f61ab675",
+    "afterServer": "b96411fcd1ff7713bc96fb946e4ce0d9997fc062ef7b625b8f702313c3023750",
+    "dependencyLock": "b2d3ec5a24de12363efdc50a4bdc747c8a1751814eed1d65870347e417f53878",
+    "harness.mjs": "898d53ec79f9f59f333378555f36ad67a4695a50bedef70b7cddef9b8ad926b4",
+    "server.mjs": "62f632b27e25d65f292642e4d75eb555892fd9126b614873afa8688c5cb69b17",
+    "core.mjs": "296c3fac75ea35c30afe19177befd821c74cf22a7cd0ca76a61bcf69f1f4d85d",
+    "load-workers.mjs": "cb78cfe81b627fd8e29f246d485e44dfee32b95572d7da025b341b9706a0fccd",
+    "load-worker.mjs": "e788b7ced4be76d93d5201214a75f25a23ad391ed6e50f7dbbc79a7f1000d548",
+    "experiments/portable-performance.mjs": "957421c71c7f88bd97892b7a763e32721814d361a52c7167e5b6152b988e2330"
+  },
+  "samples": [
+    {
+      "workload": "primary",
+      "variant": "native",
+      "repeat": 1,
+      "elapsedMs": 166.411791,
+      "clientCpuMs": 577.006,
+      "events": 320000,
+      "wireBytes": 61084544,
+      "eventsPerSecond": 1922940.6647032602,
+      "wireMiBPerSecond": 350.06390107409817,
+      "firstEventMs": [
+        0.7696250000000191,
+        0.6562079999999924,
+        0.642167000000029,
+        0.6887499999999704,
+        0.7392079999999623,
+        0.6102080000000001,
+        0.5792500000000018,
+        0.62662499999999,
+        0.7973330000000374,
+        0.6391670000000431,
+        0.6251659999999788,
+        0.6579580000000078,
+        0.7681660000000079,
+        0.6279580000000351,
+        0.5844999999999914,
+        0.7372500000000173
+      ],
+      "loaderClients": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "loaderThreadIds": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "server": {
+        "cpuMs": 179.191,
+        "rssBeforeBytes": 86065152,
+        "rssAfterBytes": 86343680,
+        "processPeakRssBytes": 86343680,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": 20000
+      }
+    },
+    {
+      "workload": "primary",
+      "variant": "before-generic",
+      "repeat": 1,
+      "elapsedMs": 225.75937499999998,
+      "clientCpuMs": 589.989,
+      "events": 320000,
+      "wireBytes": 61084544,
+      "eventsPerSecond": 1417438.3677311298,
+      "wireMiBPerSecond": 258.03916555929294,
+      "firstEventMs": [
+        1.8811660000000074,
+        1.8125830000000178,
+        1.8000419999999622,
+        1.7904999999999518,
+        1.0061660000000074,
+        1.279166000000032,
+        1.2671249999999645,
+        1.241790999999921,
+        1.0464580000000296,
+        1.2839999999999918,
+        1.2725419999999303,
+        1.260582999999997,
+        0.9680000000000746,
+        1.3076670000000377,
+        1.319833000000017,
+        1.3150830000000724
+      ],
+      "loaderClients": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "loaderThreadIds": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "server": {
+        "cpuMs": 244.61,
+        "rssBeforeBytes": 91652096,
+        "rssAfterBytes": 92241920,
+        "processPeakRssBytes": 92241920,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "workload": "primary",
+      "variant": "after-generic",
+      "repeat": 1,
+      "elapsedMs": 224.43650000000002,
+      "clientCpuMs": 593.985,
+      "events": 320000,
+      "wireBytes": 61084544,
+      "eventsPerSecond": 1425793.041684396,
+      "wireMiBPerSecond": 259.5601015975008,
+      "firstEventMs": [
+        1.433917000000065,
+        1.2953749999999218,
+        1.232582999999977,
+        1.2125839999998789,
+        0.8407079999999496,
+        1.1332499999998618,
+        1.1197500000000673,
+        1.0197499999999309,
+        0.8858339999999316,
+        1.164290999999821,
+        1.1397080000001552,
+        1.2129580000000715,
+        1.400541000000203,
+        1.293333999999959,
+        1.26237500000002,
+        1.2196249999999509
+      ],
+      "loaderClients": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "loaderThreadIds": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "server": {
+        "cpuMs": 247.787,
+        "rssBeforeBytes": 92356608,
+        "rssAfterBytes": 92962816,
+        "processPeakRssBytes": 92962816,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "workload": "primary",
+      "variant": "before-generic",
+      "repeat": 2,
+      "elapsedMs": 228.68112499999984,
+      "clientCpuMs": 586.047,
+      "events": 320000,
+      "wireBytes": 61084544,
+      "eventsPerSecond": 1399328.4316753307,
+      "wireMiBPerSecond": 254.74232183433392,
+      "firstEventMs": [
+        0.9819999999999709,
+        1.2966659999999592,
+        1.2952500000001237,
+        1.385332999999946,
+        1.0311249999999745,
+        1.3466249999999036,
+        1.2997090000001208,
+        1.2939159999998537,
+        1.5662499999998545,
+        1.4452080000000933,
+        1.3931669999999485,
+        1.351207999999815,
+        1.57487500000002,
+        1.5006659999999101,
+        1.4500419999999394,
+        1.4322920000001886
+      ],
+      "loaderClients": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "loaderThreadIds": [
+        13,
+        14,
+        15,
+        16
+      ],
+      "server": {
+        "cpuMs": 250.936,
+        "rssBeforeBytes": 92078080,
+        "rssAfterBytes": 92553216,
+        "processPeakRssBytes": 92553216,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "workload": "primary",
+      "variant": "after-generic",
+      "repeat": 2,
+      "elapsedMs": 225.663,
+      "clientCpuMs": 613.13,
+      "events": 320000,
+      "wireBytes": 61084544,
+      "eventsPerSecond": 1418043.720060444,
+      "wireMiBPerSecond": 258.14936760650835,
+      "firstEventMs": [
+        1.0229590000003554,
+        1.2765840000001845,
+        1.25,
+        1.2359580000002097,
+        1.0479169999998703,
+        1.3294590000000426,
+        1.306332999999995,
+        1.1467500000003383,
+        2.368583000000399,
+        2.2668750000002547,
+        2.349750000000313,
+        2.3003749999998035,
+        1.3355839999999262,
+        1.421875,
+        1.403874999999971,
+        1.41662499999984
+      ],
+      "loaderClients": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "loaderThreadIds": [
+        17,
+        18,
+        19,
+        20
+      ],
+      "server": {
+        "cpuMs": 248.708,
+        "rssBeforeBytes": 92143616,
+        "rssAfterBytes": 92717056,
+        "processPeakRssBytes": 92717056,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "workload": "primary",
+      "variant": "native",
+      "repeat": 2,
+      "elapsedMs": 161.63245800000004,
+      "clientCpuMs": 555.383,
+      "events": 320000,
+      "wireBytes": 61084544,
+      "eventsPerSecond": 1979800.3690570612,
+      "wireMiBPerSecond": 360.41499005223,
+      "firstEventMs": [
+        0.7809999999999491,
+        0.6890830000002097,
+        0.6896249999999782,
+        0.7217500000001564,
+        0.9337909999999283,
+        0.7926669999997102,
+        0.7849999999998545,
+        0.7606660000001284,
+        0.7607500000003711,
+        0.6298750000000837,
+        0.6123750000001564,
+        0.6914579999997841,
+        0.8577500000001237,
+        0.6998750000002474,
+        0.670875000000251,
+        0.6852920000001177
+      ],
+      "loaderClients": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "loaderThreadIds": [
+        21,
+        22,
+        23,
+        24
+      ],
+      "server": {
+        "cpuMs": 174.688,
+        "rssBeforeBytes": 85786624,
+        "rssAfterBytes": 86147072,
+        "processPeakRssBytes": 86147072,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": 20000
+      }
+    },
+    {
+      "workload": "primary",
+      "variant": "after-generic",
+      "repeat": 3,
+      "elapsedMs": 222.85670900000014,
+      "clientCpuMs": 579.448,
+      "events": 320000,
+      "wireBytes": 61084544,
+      "eventsPerSecond": 1435900.2313006418,
+      "wireMiBPerSecond": 261.40007632522054,
+      "firstEventMs": [
+        1.0162909999999101,
+        1.3293329999996786,
+        1.3305829999999332,
+        1.331250000000182,
+        1.006916999999703,
+        1.264709000000039,
+        1.2469999999998436,
+        1.2593329999999696,
+        1.03125,
+        1.2766249999999673,
+        1.1917090000001735,
+        1.260834000000159,
+        1.5600420000000668,
+        1.4590830000001915,
+        1.4248750000001564,
+        1.4042919999997139
+      ],
+      "loaderClients": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "loaderThreadIds": [
+        25,
+        26,
+        27,
+        28
+      ],
+      "server": {
+        "cpuMs": 246.281,
+        "rssBeforeBytes": 91815936,
+        "rssAfterBytes": 92438528,
+        "processPeakRssBytes": 92438528,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "workload": "primary",
+      "variant": "native",
+      "repeat": 3,
+      "elapsedMs": 167.30425000000014,
+      "clientCpuMs": 552.948,
+      "events": 320000,
+      "wireBytes": 61084544,
+      "eventsPerSecond": 1912683.0310646605,
+      "wireMiBPerSecond": 348.19653859473055,
+      "firstEventMs": [
+        0.7627090000000862,
+        0.7503750000000764,
+        0.761417000000165,
+        0.7714580000001661,
+        0.7661250000001019,
+        0.7871249999998327,
+        0.7668340000000171,
+        0.7546660000002703,
+        0.9871670000002268,
+        0.9252080000001115,
+        0.9149999999999636,
+        0.846958000000086,
+        1.004667000000154,
+        0.8710000000000946,
+        0.8297090000000935,
+        0.9206659999999829
+      ],
+      "loaderClients": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "loaderThreadIds": [
+        29,
+        30,
+        31,
+        32
+      ],
+      "server": {
+        "cpuMs": 179.928,
+        "rssBeforeBytes": 85164032,
+        "rssAfterBytes": 85590016,
+        "processPeakRssBytes": 85590016,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": 20000
+      }
+    },
+    {
+      "workload": "primary",
+      "variant": "before-generic",
+      "repeat": 3,
+      "elapsedMs": 227.33437500000036,
+      "clientCpuMs": 590.08,
+      "events": 320000,
+      "wireBytes": 61084544,
+      "eventsPerSecond": 1407618.183567705,
+      "wireMiBPerSecond": 256.2514390627788,
+      "firstEventMs": [
+        1.534375000000182,
+        1.365791999999601,
+        1.2767909999993208,
+        1.2258750000000873,
+        1.0216250000003129,
+        1.2901670000001104,
+        1.2797080000000278,
+        1.2359999999998763,
+        0.9904160000005504,
+        1.3125830000008136,
+        1.3181670000003578,
+        1.3090000000001965,
+        0.9915419999997539,
+        1.2647079999997004,
+        1.2339579999998023,
+        1.2903749999995853
+      ],
+      "loaderClients": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "loaderThreadIds": [
+        33,
+        34,
+        35,
+        36
+      ],
+      "server": {
+        "cpuMs": 248.804,
+        "rssBeforeBytes": 92356608,
+        "rssAfterBytes": 92897280,
+        "processPeakRssBytes": 92897280,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    }
+  ],
+  "errors": [],
+  "summary": {
+    "primary": {
+      "complete": true,
+      "expectedRepeats": 3,
+      "expectedEventsPerTrial": 320000,
+      "measuredEvents": 2880000,
+      "identicalWireBytes": 61084544,
+      "scores": {
+        "native": {
+          "measuredRepeats": 3,
+          "eventsPerSecond": {
+            "count": 3,
+            "mean": 1938474.6882749938,
+            "median": 1922940.6647032602,
+            "min": 1912683.0310646605,
+            "max": 1979800.3690570612,
+            "ci95": [
+              1848654.139308533,
+              2028295.2372414547
+            ]
+          },
+          "elapsedMs": {
+            "count": 3,
+            "mean": 165.11616633333338,
+            "median": 166.411791,
+            "min": 161.63245800000004,
+            "max": 167.30425000000014,
+            "ci95": [
+              157.5394281870968,
+              172.69290447956996
+            ]
+          },
+          "serverCpuMs": {
+            "count": 3,
+            "mean": 177.93566666666666,
+            "median": 179.191,
+            "min": 174.688,
+            "max": 179.928,
+            "ci95": [
+              170.8885943179202,
+              184.98273901541313
+            ]
+          },
+          "clientCpuMs": {
+            "count": 3,
+            "mean": 561.779,
+            "median": 555.383,
+            "min": 552.948,
+            "max": 577.006,
+            "ci95": [
+              528.8787774148185,
+              594.6792225851815
+            ]
+          }
+        },
+        "before-generic": {
+          "measuredRepeats": 3,
+          "eventsPerSecond": {
+            "count": 3,
+            "mean": 1408128.3276580554,
+            "median": 1407618.183567705,
+            "min": 1399328.4316753307,
+            "max": 1417438.3677311298,
+            "ci95": [
+              1385605.9648303005,
+              1430650.6904858102
+            ]
+          },
+          "elapsedMs": {
+            "count": 3,
+            "mean": 227.25829166666674,
+            "median": 227.33437500000036,
+            "min": 225.75937499999998,
+            "max": 228.68112499999984,
+            "ci95": [
+              223.62529441858226,
+              230.89128891475121
+            ]
+          },
+          "serverCpuMs": {
+            "count": 3,
+            "mean": 248.11666666666667,
+            "median": 248.804,
+            "min": 244.61,
+            "max": 250.936,
+            "ci95": [
+              240.1207673770696,
+              256.1125659562637
+            ]
+          },
+          "clientCpuMs": {
+            "count": 3,
+            "mean": 588.7053333333333,
+            "median": 589.989,
+            "min": 586.047,
+            "max": 590.08,
+            "ci95": [
+              582.9848122492992,
+              594.4258544173674
+            ]
+          }
+        },
+        "after-generic": {
+          "measuredRepeats": 3,
+          "eventsPerSecond": {
+            "count": 3,
+            "mean": 1426578.9976818273,
+            "median": 1425793.041684396,
+            "min": 1418043.720060444,
+            "max": 1435900.2313006418,
+            "ci95": [
+              1404333.8272368673,
+              1448824.1681267873
+            ]
+          },
+          "elapsedMs": {
+            "count": 3,
+            "mean": 224.3187363333334,
+            "median": 224.43650000000002,
+            "min": 222.85670900000014,
+            "max": 225.663,
+            "ci95": [
+              220.82365255708618,
+              227.8138201095806
+            ]
+          },
+          "serverCpuMs": {
+            "count": 3,
+            "mean": 247.592,
+            "median": 247.787,
+            "min": 246.281,
+            "max": 248.708,
+            "ci95": [
+              244.54820306165098,
+              250.63579693834905
+            ]
+          },
+          "clientCpuMs": {
+            "count": 3,
+            "mean": 595.5210000000001,
+            "median": 593.985,
+            "min": 579.448,
+            "max": 613.13,
+            "ci95": [
+              553.5519493344752,
+              637.4900506655249
+            ]
+          }
+        }
+      },
+      "paired": {
+        "before-generic": {
+          "metric": "after-generic throughput percent difference within the same repeat block",
+          "count": 3,
+          "mean": 1.3120271685117313,
+          "median": 1.3374478758147346,
+          "min": 0.5894206156306758,
+          "max": 2.0092130140897835,
+          "ci95": [
+            -0.4524429312094824,
+            3.076497268232945
+          ]
+        },
+        "native": {
+          "metric": "after-generic throughput percent difference within the same repeat block",
+          "count": 3,
+          "mean": -26.385116983390404,
+          "median": -25.85350823061312,
+          "min": -28.37440874223953,
+          "max": -24.927433977318557,
+          "ci95": [
+            -30.81697348519565,
+            -21.953260481585158
+          ]
+        }
+      },
+      "ratiosOfMedians": {
+        "afterVsBefore": 1.0129117812833488,
+        "afterVsNative": 0.7414649176938688
+      },
+      "nativeParitySupported": false
+    }
+  }
+}

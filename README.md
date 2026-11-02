@@ -8,7 +8,7 @@
 [![Documentation](https://img.shields.io/badge/docs-MinkSSE-217346?style=plastic)](docs/site/README.md)
 [![GitHub stars](https://img.shields.io/github/stars/accntech/minksse?style=social&label=Stars)](https://github.com/accntech/minksse/stargazers)
 
-Server-Sent Events for JavaScript applications: produce a streaming Web `Response`, subscribe to named events over POST, or parse SSE text directly. Zero runtime dependencies, native JavaScript ESM, and TypeScript declarations generated from JSDoc.
+Server-Sent Events for JavaScript applications: produce a streaming Web `Response`, subscribe to named events through native `EventSource`, or parse SSE text directly. Zero runtime dependencies, native JavaScript ESM, and TypeScript declarations generated from JSDoc.
 
 MinkSSE uses Web APIs and works independently of a frontend or server framework. Use the producer, client, and parser together, or import just the part your application needs.
 
@@ -17,18 +17,16 @@ MinkSSE uses Web APIs and works independently of a frontend or server framework.
 - **Streaming responses with explicit cleanup.** Send named events, finish after accepted events drain, and release timers or subscriptions on termination. Abort signals, configurable heartbeats, and an `onStop` hook support long-lived connections.
 - **Bounded server buffering.** Each producer limits queued serialized UTF-8 wire data to 256 KiB. Oversized events and slow consumers terminate the stream instead of growing the queue indefinitely.
 - **Burst delivery without a batching timer.** `emitBatch()` validates an entire array of payloads before publishing its frames. Opt-in `coalesceBytes` combines queued complete events into fewer output chunks while keeping the first event immediate.
-- **Named JSON subscriptions over POST.** Subscribe multiple listeners to each event and dispose of each subscription independently. Malformed subscribed JSON and listener failures reach `onerror`; a failing listener does not block other listeners.
+- **Configurable native EventSource wrapper.** Connect over GET, configure credentials and decoding, and dispose of each subscription independently. Malformed subscribed JSON and listener failures reach `onerror`; a failing listener does not block other listeners.
 - **Connection recovery you control.** Observe readiness with `onopen`, detect stalled streams with an idle timeout, and schedule retries through `onclose({ connect })`. Subscriptions survive reconnects; automatic retries and missed-event replay are not included.
-- **Node HTTP/1 integration.** `writeSseResponse()` forwards status and headers, flushes headers before the first event, respects socket backpressure, and cancels the source body on premature disconnect.
 - **Raw incremental parsing.** Parse SSE text across chunk boundaries, including split line endings, multiline data, comments, IDs, and Unicode. Receive raw strings without JSON decoding, with a configurable frame limit.
-- **Focused ESM imports.** Zero runtime dependencies, tree-shakeable ESM entry points, and TypeScript declarations generated from JSDoc. Node-specific code stays in `minksse/node`.
+- **Focused ESM imports.** Zero runtime dependencies, tree-shakeable ESM entry points, and TypeScript declarations generated from JSDoc. The library uses standard Web APIs throughout.
 
 | API | Purpose |
 | --- | --- |
 | [`produce()`](#server-api) | Send named events from a server as an SSE `Response`. |
-| [`createSseConnection()`](#client-options) | Open a POST stream and deliver subscribed events as parsed JSON. |
+| [`createSseConnection()`](#client-options) | Wrap a native EventSource GET stream and decode subscribed events. |
 | [`createSseParser()`](#parser-api) | Parse incremental SSE text into raw event, data, and ID strings. |
-| [`writeSseResponse()`](#node-http-adapter) | Deliver a Web Response through a Node HTTP/1 response (`minksse/node`). |
 
 ## Install
 
@@ -51,15 +49,15 @@ npm install /absolute/path/to/minksse
 
 For a portable archive, run `npm pack` in the checkout, then install the generated `.tgz` file in your application. Packing builds the package automatically.
 
-The package ships ESM JavaScript and declarations under `dist/`. Web functions and types are available from `minksse`, or from the focused `minksse/server`, `minksse/client`, and `minksse/parser` entry points. The Node adapter is available separately from `minksse/node`. CommonJS output is not provided.
+The package ships ESM JavaScript and declarations under `dist/`. Web functions and types are available from `minksse`, or from the focused `minksse/server`, `minksse/client`, and `minksse/parser` entry points. CommonJS output is not provided.
 
-Use a runtime with Fetch, Streams, `Response`, `AbortController`, `TextEncoder`, and `TextDecoder` support. The server must support streaming Web Responses; Node HTTP/1 servers can use `writeSseResponse()`. Tests run with Bun and include real Node.js HTTP checks.
+The client requires native `EventSource`, or a compatible constructor supplied through `eventSource`. The producer requires Streams, `Response`, and `TextEncoder`; the standalone parser consumes strings. Your server or framework must send streaming Web Responses and propagate client disconnection to the request signal or response-body cancellation. MinkSSE has no runtime-specific HTTP adapter. Tests run with Bun and include real HTTP checks.
 
 ## Quick start
 
 ### Serve events
 
-Register this handler for `POST /events` using your server framework's routing API. It accepts a Web `Request` and returns a Web `Response`; it does not register a route by itself.
+Register this handler for `GET /events` using your server framework's routing API. It accepts a Web `Request` and returns a Web `Response`; it does not register a route by itself.
 
 ```js
 import { produce } from 'minksse/server';
@@ -97,11 +95,11 @@ function dispose() {
 }
 ```
 
-The connection starts automatically in a microtask, allowing subscriptions to register first. It sends POST with `Accept: text/event-stream` and `cache: no-store`.
+The connection starts automatically in a microtask, allowing subscriptions to register first. Native `EventSource` opens a GET request and handles SSE framing and UTF-8 decoding.
 
-Subscribed event data is parsed as JSON and delivered as an unknown value: validate its shape before using it. Malformed JSON is reported through `onerror` and skipped. Empty `ping` heartbeats are delivered as `''` if subscribed to. Use the parser directly when you need raw text.
+Subscribed event data is parsed as JSON and delivered as an unknown value: validate its shape before using it. Malformed JSON is reported through `onerror` and skipped. Empty `ping` heartbeats are delivered as `''` if subscribed to. Set `decode: data => data` when you need raw text.
 
-Each subscription returns an independent disposer. `close()` permanently closes the connection, cancels its request and reader, and clears all listeners and internal timers. `connection.closed` reports permanent local closure, rather than whether a request is currently connected.
+Each subscription returns an independent disposer. `close()` permanently closes the connection, closes its native EventSource, and clears all listeners and internal timers. `connection.closed` reports permanent local closure, rather than whether a request is currently connected.
 
 ### Reconnect when needed
 
@@ -125,9 +123,9 @@ function dispose() {
 }
 ```
 
-This example uses a fixed delay. Choose a retry policy appropriate to your application. `onclose` runs when an attempt ends, including normal EOF and failures, unless you called `close()`. Only one request is active at a time. `connect()` resolves when its attempt ends; use `onopen` to observe readiness. Subscriptions survive reconnects.
+This example uses a fixed delay. Choose a retry policy appropriate to your application. The wrapper closes native EventSource on its error event, including EOF, to prevent built-in automatic retries, then calls `onclose`. Calling `close()` locally suppresses `onclose`. Only one attempt is active at a time. `connect()` resolves when its attempt ends; use `onopen` to observe readiness. Subscriptions survive reconnects.
 
-There is no replay or `Last-Event-ID` resume behavior. Authentication, session expiry, and catching up on missed events belong to the application. The browser's `EventSource` uses GET and cannot replace this POST client directly.
+Each explicit reconnect creates a fresh EventSource, so it does not carry the previous attempt's `Last-Event-ID`. Authentication, session expiry, and catching up on missed events belong to the application.
 
 ## Server API
 
@@ -151,6 +149,8 @@ The returned cleanup function and `onStop` each run once. Normal finish, abort, 
 
 Normal finish and abort drain accepted frames. Errors and reader cancellation discard the backlog. `ping` must be an integer from 1 through 2,147,483,647; invalid values throw `RangeError` before setup and still invoke `onStop`.
 
+For batches of larger events, measure `coalesceBytes: 65_536` against 16 KiB in your workload. The local 1 KiB-event sweep benefited from 64 KiB, with about 1.4 MiB higher median whole-process RSS. This is an explicit tuning choice; coalescing remains off by default.
+
 Set `coalesceBytes: 16_384` to combine queued complete frames when the consumer reads. This reduces output chunks during bursts without waiting for more events or adding a timer. The first event remains immediate. A single event larger than the target stays whole, subject to the existing 256 KiB queue limit. Invalid coalescing values throw `RangeError` before setup and still invoke `onStop`. Network chunk boundaries are independent of SSE event boundaries; the client and parser continue to deliver events individually.
 
 For a burst already available as an array, `emitBatch()` can put its first group into one output chunk as well:
@@ -168,37 +168,15 @@ const response = produce(({ emitBatch, lock }) => {
 
 All values are validated synchronously before any new batch frame is published. An empty array consumes no event ID. Invalid input, overflow, throwing getters, or reentrant emission during validation terminates the stream without publishing a staged prefix. Abort or finish during array access discards staging and retains the usual drain behavior for earlier accepted events. This is validation atomicity, not network-atomic delivery. The batch must fit the available 256 KiB wire budget; divide larger inputs into paced batches. Coalescing off still produces individual event chunks. Scalar `emit()` retains immediate first-event delivery and does not wait for a batch.
 
-## Node HTTP adapter
+## Server integration
 
-`writeSseResponse(response, destination, { signal }?)` is exported from `minksse/node`. It streams a Web `Response` to a fresh Node HTTP/1 `ServerResponse`, preserves status and headers (including separate cookies), flushes headers immediately, and observes socket backpressure. It resolves after Node's `finish` event, which means bytes were handed to the operating system rather than acknowledged by the remote client.
+Return the `Response` from `produce()` through a server or framework that supports streaming Web Responses. Pass the incoming request's abort signal as `signal` and return a cleanup function for resources allocated inside setup. Verify that disconnecting the client aborts the request or cancels the response body, so those resources are released.
 
-```js
-import { createServer } from 'node:http';
-import { produce } from 'minksse/server';
-import { writeSseResponse } from 'minksse/node';
+Your framework's HTTP integration is responsible for sending status and headers, streaming the body with backpressure, and propagating socket errors and disconnects. Keep response buffering disabled for the SSE route. The producer itself uses the same Web Streams path in every runtime.
 
-const server = createServer((request, destination) => {
-  if (request.method !== 'POST' || request.url !== '/events') {
-    destination.writeHead(404).end();
-    return;
-  }
-  const response = produce(({ emit }) => {
-    const timer = setInterval(() => {
-      emit('tick', JSON.stringify({ time: Date.now() }));
-    }, 1_000);
-    return () => clearInterval(timer);
-  }, { coalesceBytes: 16_384 });
+### Migrate from the Node adapter
 
-  void writeSseResponse(response, destination).catch(error => {
-    if (error.name !== 'AbortError') console.error(error);
-  });
-});
-server.listen(3000);
-```
-
-When this adapter owns a MinkSSE response body, later emissions use Node's native UTF-8 byte counter. Synchronous emissions made before attachment and cloned or transformed bodies use the Web implementation. Validation, the 256 KiB queue limit, and output buffering options apply to both paths.
-
-Premature disconnect, stream errors, invalid response headers, and an optional abort signal reject the promise, cancel the body reader, and destroy an unfinished destination. Reader cancellation releases the producer's resources. Cancellation does not wait for an uncooperative underlying cancel callback. Catch the returned promise even when disconnects are expected. Headers must not have been sent before calling the adapter, and the response body must be unlocked. The adapter does not create routes or convert Node requests into Web requests. Its implementation is exercised against real Node HTTP sockets; browser entry points do not load it.
+The `minksse/node` entry point and `writeSseResponse()` have been removed. Remove those imports and use your server framework's streaming Web Response support. The private Node-specific queue, UTF-8 counting, encoding, and scheduling hooks are also removed; `produce()` retains its byte limit, framing, batching, coalescing, and cleanup behavior through Web APIs.
 
 ## Client options
 
@@ -206,15 +184,33 @@ Premature disconnect, stream errors, invalid response headers, and an optional a
 
 | Option | Default | Behavior |
 | --- | --- | --- |
-| `fetch` | Global `fetch` | Replace the fetch implementation for request customization or testing. |
-| `idleTimeoutMs` | `75_000` | Ends an attempt when no bytes arrive within this duration. Empty chunks do not extend it. |
-| `onopen` | — | Called after a successful response with SSE content type and a readable body. |
+| `eventSource` | Global `EventSource` | Supply a compatible EventSource constructor for another runtime or testing. |
+| `withCredentials` | `false` | Include credentials for cross-origin EventSource requests. The server must allow credentialed CORS. |
+| `decode(data, event)` | JSON decoding | Decode subscribed data with access to its native `MessageEvent`. Empty named `ping` events default to `''`. |
+| `idleTimeoutMs` | `75_000` | End an attempt after this duration without an open event, subscribed event, or configured heartbeat. Set `0` to disable. |
+| `heartbeatEvent` | `'ping'` | Observe this event name for idle detection even without an application subscription. |
+| `onopen` | — | Called when native EventSource opens. |
 | `onclose({ connect })` | — | Called after an attempt ends; lets the application schedule another attempt. |
-| `onerror(cause)` | — | Receives transport, parser, subscribed JSON, and callback failures. Error-observer failures are logged. |
+| `onerror(cause)` | — | Receive native transport events, decoding failures, and callback failures. Error-observer failures are logged. |
 
-`idleTimeoutMs` must be an integer from 1 through 2,147,483,647. An idle timeout triggers `onclose`; it is not reported through `onerror`.
+`idleTimeoutMs` must be an integer from 0 through 2,147,483,647. An idle timeout triggers `onclose`; it is not reported through `onerror`. Native EventSource hides raw bytes, comments, and event names without listeners. These do not refresh the deadline. Keep the server's heartbeat interval below the timeout, or disable idle detection for streams without observable heartbeats.
 
-The client has no connection cache, visibility handling, or options for request method, body, or headers. Use a custom `fetch` implementation if you need to add request headers. Identical consecutive events are delivered individually, and a failing listener does not prevent delivery to other listeners.
+```js
+const connection = createSseConnection('/events', {
+  withCredentials: true,
+  idleTimeoutMs: 90_000,
+  heartbeatEvent: 'ping',
+  decode: data => data // Deliver raw text instead of JSON.
+});
+```
+
+The client has no connection cache or visibility handling. Native EventSource uses GET and provides no options for request bodies or arbitrary headers; authenticate with an appropriate session mechanism. Native error events do not expose HTTP status or response bodies. Identical consecutive events are delivered individually, and a failing listener does not prevent delivery to other listeners.
+
+### Migrate from the Fetch client
+
+Change the SSE route from POST to GET and remove the `fetch` option. Move request-header authentication to a mechanism supported by EventSource, such as session cookies; use `withCredentials` for credentialed cross-origin requests. Supply an `eventSource` constructor if your runtime does not provide one. Existing subscriptions, disposers, and `onclose({ connect })` retry policies retain their roles.
+
+The idle timeout now observes subscribed events and the configured heartbeat instead of raw bytes. Comment-only heartbeats no longer keep an attempt alive. The standalone parser's frame limit does not apply to the native client; the browser or injected implementation owns parsing.
 
 ## Parser API
 
@@ -259,7 +255,7 @@ Source and executable tests are JavaScript. TypeScript is a development tool for
 
 Tests cover framing, parser boundaries, connection lifecycle, cleanup, byte budgets, resource retention, and Node imports of all public entry points. Some resource tests use Bun GC and fresh subprocesses. Benchmark results vary by runtime and machine and are not CI thresholds; pass an earlier build directory to `node scripts/benchmark.mjs` to compare it with `dist/`.
 
-For HTTP comparisons against native SSE and other packages, follow the [comparison benchmark instructions](benchmarks/README.md). The [latest optimization report](benchmarks/NATIVE-PERFORMANCE.md) separates scalar and batch APIs, client load limits, CPU use, and the remaining native performance gap.
+For HTTP comparisons against native SSE and other packages, follow the [comparison benchmark instructions](benchmarks/README.md). The [latest pure Web API comparison](benchmarks/README.md#tuned-web-api-producer-november-2-2026) covers all six projects across ASCII, 1 KiB, Unicode, and mixed-newline delivery. Matched before/after controls measured 14.5% higher median Unicode throughput and 41.0% higher multiline throughput. An explicit 64 KiB coalescing target improved the 1 KiB workload by 56.4% in a separate configuration sweep; the library default remains 0. Native Node remains faster in these measurements. Earlier reports involving the removed Node adapter and private hooks are historical.
 
 ## License
 

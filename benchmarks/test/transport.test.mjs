@@ -1,11 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { fork } from 'node:child_process';
+import { fork, execFile } from 'node:child_process';
 import { mkdtemp, readdir, readFile, rm, writeFile, copyFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { once } from 'node:events';
+import { promisify } from 'node:util';
 import { targets } from '../core.mjs';
 
 const harness = await import('../harness.mjs').catch(() => ({}));
@@ -21,7 +22,7 @@ test('every genuine adapter delivers all validated events over concurrent HTTP s
     assert.equal(sample.firstEventMs.length, 3, target);
     assert.ok(sample.server.cpuMs >= 0, target);
     assert.ok(Number.isFinite(sample.clientCpuMs) && sample.clientCpuMs >= 0, target);
-    assert.ok(['pipeline', 'direct', 'hono-node', 'kit', 'minksse-node'].includes(sample.server.setup.bridge));
+    assert.ok(['pipeline', 'direct', 'hono-node', 'kit'].includes(sample.server.setup.bridge));
   }
 });
 
@@ -66,7 +67,7 @@ test('server exits if its benchmark parent disconnects', { timeout: 5000 }, asyn
 });
 
 test('official Node adapters serve all Web producers without bypassing framing', { timeout: 20000 }, async () => {
-  for (const bridge of ['hono-node', 'kit', 'minksse-node']) for (const target of ['hono', 'sveltekit-sse', 'minksse']) {
+  for (const bridge of ['hono-node', 'kit']) for (const target of ['hono', 'sveltekit-sse', 'minksse']) {
     const sample = await harness.measureTarget(target, {
       bridge, events: 37, clients: 3, bytes: 64, batch: 8, interval: 0, warmup: 1, timeout: 5000
     });
@@ -75,13 +76,13 @@ test('official Node adapters serve all Web producers without bypassing framing',
   }
 });
 
-test('MinkSSE coalescing can be disabled independently of its Node adapter', { timeout: 20000 }, async () => {
+test('MinkSSE coalescing can be disabled on the generic Web stream bridge', { timeout: 20000 }, async () => {
   for (const coalesce of [0, 256, 16384]) {
     const sample = await harness.measureTarget('minksse', { setup: 'optimized', coalesce,
       events: 53, clients: 3, bytes: 128, batch: 16, interval: 0, warmup: 1, timeout: 5000 });
     assert.equal(sample.events, 159);
     assert.equal(sample.server.setup.coalesceBytes, coalesce);
-    assert.equal(sample.server.setup.bridge, 'minksse-node');
+    assert.equal(sample.server.setup.bridge, 'direct');
   }
 });
 
@@ -176,4 +177,25 @@ test('Native and MinkSSE frame Unicode and mixed-newline data over HTTP', { time
       assert.equal(sample.wireBytes, expectedWireBytes * clients, `${target}: ${payload}`);
     }
   }
+});
+
+
+test('benchmark reports accept a Web-only build without removed Node modules', { timeout: 10000 }, async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'sse-web-only-build-'));
+  try {
+    await writeFile(join(directory, 'package.json'), '{"type":"module"}');
+    await writeFile(join(directory, 'server.js'), `export function produce() {
+      return new Response('id: 1\\nevent: message\\ndata: {"sequence":0,"payload":"x"}\\n\\n', {headers:{'content-type':'text/event-stream'}});
+    }`);
+    const output = join(directory, 'report.json');
+    await promisify(execFile)(process.execPath, [new URL('../run.mjs', import.meta.url).pathname,
+      '--targets=minksse', '--events=1', '--clients=1', '--bytes=1', '--repeats=1', '--warmup=0',
+      `--minkbuild=${directory}`, `--output=${output}`]);
+    const report = JSON.parse(await readFile(output, 'utf8'));
+    assert.equal(report.effectiveSetup.minksse.bridge, 'direct');
+    assert.equal(report.samples[0].events, 1);
+    assert.equal(typeof report.source.localServerSha256, 'string');
+    assert.equal('localNodeSha256' in report.source, false);
+    assert.equal('localCapabilitiesSha256' in report.source, false);
+  } finally { await rm(directory, { recursive: true, force: true }); }
 });

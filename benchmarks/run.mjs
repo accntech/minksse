@@ -17,7 +17,7 @@ const versions = Object.fromEntries(await Promise.all(packageNames.map(async nam
 const hashFile = async url => createHash('sha256').update(await readFile(url)).digest('hex');
 const root = resolve(import.meta.dirname, '..');
 const report = {
-  schemaVersion: 4,
+  schemaVersion: 5,
   createdAt: new Date().toISOString(),
   environment: { node: process.version, v8: process.versions.v8, os: platform(), osRelease: release(), arch: arch(),
     cpu: cpus()[0].model, logicalCpus: cpus().length, availableParallelism: availableParallelism() },
@@ -27,11 +27,6 @@ const report = {
     dirty: Boolean(execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' }).trim()),
     minkBuildDirectory: fileURLToPath(minkDirectory),
     localServerSha256: await hashFile(new URL('server.js', minkDirectory)),
-    localNodeSha256: await hashFile(new URL('node.js', minkDirectory)),
-    localCapabilitiesSha256: await hashFile(new URL('producer-capabilities.js', minkDirectory)).catch(error => {
-      if (error.code === 'ENOENT') return null;
-      throw error;
-    }),
     lockSha256: await hashFile(new URL('./package-lock.json', import.meta.url)),
     benchmarkServerSha256: await hashFile(new URL('./server.mjs', import.meta.url)),
     benchmarkHarnessSha256: await hashFile(new URL('./harness.mjs', import.meta.url)),

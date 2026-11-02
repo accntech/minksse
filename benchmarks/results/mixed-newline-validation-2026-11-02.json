@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "status": "validation-failed",
+  "recordedAt": "2026-11-02T05:10:03.976Z",
+  "runtime": "v24.12.0",
+  "workload": "Mixed CRLF, CR and LF whitespace inside identity-serialized JSON, with SSE framing performed by each package.",
+  "originalAttempt": {
+    "clients": 16,
+    "loaders": 4,
+    "eventsPerClient": 20000,
+    "bytes": 128,
+    "batch": 16,
+    "repeats": 6,
+    "failedTarget": "better-sse",
+    "log": "mixed-newline-failed-run-2026-11-02.log",
+    "logSha256": "ad321d6c616b3c5b39092ea2d35cec9d27fdce2a44bd5deff2427a1111421772",
+    "note": "The six-project run aborted on its first Better SSE trial; no successful throughput report was produced. Preceding partial log scores are not a completed comparison."
+  },
+  "capture": {
+    "clients": 1,
+    "events": 1,
+    "bytes": 4,
+    "batch": 1,
+    "note": "Tiny correctness reproductions using the unmodified package-backed benchmark server; Better SSE/sveltekit-sse captures have one event, Fastify has two events (see its captureOptions). Captured bytes are replayed unchanged to native Node EventSource. These are not throughput samples."
+  },
+  "hashes": {
+    "preFixValidator": "296c3fac75ea35c30afe19177befd821c74cf22a7cd0ca76a61bcf69f1f4d85d",
+    "correctedValidator": "640dbdcf72111375e0b5127b52c595d27cad96e7cdaaffb3ba9dac5793b04911",
+    "betterSse": "a6785df0f85a3fdcabc22a3c6b0b165199ac2f4463957142c2cf3b6a95213113",
+    "sveltekitSseProducer": "64d00012f16ca35d687142954065f267932f9929483ecf2479b79aa8d17220ef",
+    "benchmarkServer": "62f632b27e25d65f292642e4d75eb555892fd9126b614873afa8688c5cb69b17",
+    "fastifySseFormatter": "60c43924dcd01d45c9820c13a940fa8ad7d8d7c6dafa2782db9f719a8a27bd4d"
+  },
+  "findings": [
+    "Better SSE with the benchmark identity serializer writes multiline JSON into one data field; JSON lines after the first are not data fields and native EventSource receives only an opening brace.",
+    "sveltekit-sse splits LF but leaves standalone CR inside a data field; native EventSource treats CR as a line ending and loses the payload line.",
+    "Fastify with @fastify/sse and the benchmark identity serializer also splits only LF, leaving standalone CR in serialized JSON. Native EventSource drops the payload line from both captured events. This is a failure of this mixed-newline/raw-JSON configuration, not a claim that ordinary compact JSON events are unsupported.",
+    "The former LF-only scorer falsely accepted sveltekit-sse and Fastify. The corrected independent scorer handles CR, LF and CRLF across byte boundaries and rejects all three captured package streams.",
+    "Earlier native/MinkSSE-only portable controls used fully LF-normalized output from both producers; their logical delivery validation is unaffected. The frozen old scorer preserves the recorded hash for audit.",
+    "Report all three package/workload results as validation failure / N/A, not zero throughput. Keep successful ASCII, Unicode and large-payload comparisons separate."
+  ],
+  "observations": [
+    {
+      "target": "better-sse",
+      "status": 200,
+      "raw": "event:message\nid:1\ndata:{\n  \"sequence\": 0,\n  \"payload\": \"xxxx\"\n}\n\n",
+      "protocolData": {
+        "valid": false,
+        "error": "Expected property name or '}' in JSON at position 1 (line 1 column 2)"
+      },
+      "fields": [
+        {
+          "raw": "event:message\nid:1\ndata:{\n  \"sequence\": 0,\n  \"payload\": \"xxxx\"\n}",
+          "data": "{"
+        }
+      ],
+      "nativeMessage": {
+        "data": "{",
+        "valid": false,
+        "error": "Expected property name or '}' in JSON at position 1 (line 1 column 2)"
+      },
+      "preFixValidator": {
+        "valid": false,
+        "error": "Expected property name or '}' in JSON at position 1 (line 1 column 2)"
+      },
+      "packageVersion": "0.16.1",
+      "correctedValidator": {
+        "valid": false,
+        "error": "Expected property name or '}' in JSON at position 1 (line 1 column 2)"
+      }
+    },
+    {
+      "target": "sveltekit-sse",
+      "status": 200,
+      "raw": "id: 1\nevent: message\ndata: {\r\ndata:   \"sequence\": 0,\r  \"payload\": \"xxxx\"\ndata: }\n\n",
+      "protocolData": {
+        "valid": false,
+        "error": "Expected double-quoted property name in JSON at position 19 (line 3 column 1)"
+      },
+      "fields": [
+        {
+          "raw": "id: 1\nevent: message\ndata: {\ndata:   \"sequence\": 0,\n  \"payload\": \"xxxx\"\ndata: }",
+          "data": "{\n  \"sequence\": 0,\n}"
+        }
+      ],
+      "nativeMessage": {
+        "data": "{\n  \"sequence\": 0,\n}",
+        "valid": false,
+        "error": "Expected double-quoted property name in JSON at position 19 (line 3 column 1)"
+      },
+      "preFixValidator": {
+        "valid": true,
+        "count": 1
+      },
+      "packageVersion": "0.15.1",
+      "correctedValidator": {
+        "valid": false,
+        "error": "Expected double-quoted property name in JSON at position 19 (line 3 column 1)"
+      }
+    },
+    {
+      "target": "fastify",
+      "status": 200,
+      "requestHeaders": {
+        "accept": "text/event-stream"
+      },
+      "packageVersion": "5.12.7",
+      "pluginVersion": "0.6.1",
+      "captureOptions": {
+        "setup": "optimized",
+        "events": 2,
+        "clients": 1,
+        "bytes": 4,
+        "batch": 1,
+        "interval": 0,
+        "warmup": 0,
+        "timeout": 3000,
+        "payload": "multiline"
+      },
+      "raw": "id: 1\nevent: message\ndata: {\r\ndata:   \"sequence\": 0,\r  \"payload\": \"xxxx\"\ndata: }\n\nid: 2\nevent: message\ndata: {\r\ndata:   \"sequence\": 1,\r  \"payload\": \"xxxx\"\ndata: }\n\n",
+      "preFixValidator": {
+        "valid": true,
+        "count": 2
+      },
+      "correctedValidator": {
+        "valid": false,
+        "error": "Expected double-quoted property name in JSON at position 19 (line 3 column 1)"
+      },
+      "nativeMessages": [
+        {
+          "data": "{\n  \"sequence\": 0,\n}",
+          "valid": false,
+          "error": "Expected double-quoted property name in JSON at position 19 (line 3 column 1)"
+        },
+        {
+          "data": "{\n  \"sequence\": 1,\n}",
+          "valid": false,
+          "error": "Expected double-quoted property name in JSON at position 19 (line 3 column 1)"
+        }
+      ]
+    }
+  ],
+  "protocolReference": "https://html.spec.whatwg.org/multipage/server-sent-events.html#parsing-an-event-stream",
+  "additionalFailedAttempts": [
+    {
+      "kind": "strict-validator two-event smoke",
+      "failedTarget": "fastify",
+      "targets": [
+        "native",
+        "hono",
+        "fastify",
+        "minksse"
+      ],
+      "eventsPerClient": 2,
+      "clients": 1,
+      "loaders": 1,
+      "repeats": 1,
+      "warmup": 0,
+      "log": "mixed-newline-valid-smoke-failed-2026-11-02.log",
+      "logSha256": "7da138573c4f2837b5f0412e998c100e331bde1ef506cf90e9ac988d22d89822",
+      "note": "Run aborted on Fastify before MinkSSE; no successful comparison report produced."
+    }
+  ]
+}

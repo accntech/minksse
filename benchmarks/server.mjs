@@ -22,7 +22,6 @@ const headers = { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-stor
 let fatal;
 let baseline;
 let kitSetResponse;
-let minkWriteResponse;
 let nativeWrites = 0;
 // Parent interruption closes IPC; do not leave a benchmark listener behind.
 process.on('disconnect', () => process.exit(0));
@@ -60,7 +59,6 @@ async function webHandler(handle, req, res) {
   try {
     const request = new Request(`http://127.0.0.1${req.url}`, { method: req.method, signal: controller.signal });
     const response = await handle(request);
-    if (setup.bridge === 'minksse-node') { await minkWriteResponse(response, res, { signal: controller.signal }); return; }
     if (setup.bridge === 'kit') { await kitSetResponse(res, response); return; }
     res.writeHead(response.status, Object.fromEntries(response.headers));
     if (setup.bridge === 'pipeline') await pipeline(Readable.fromWeb(response.body), res);
@@ -200,7 +198,6 @@ async function start() {
     };
   } else {
     let web;
-    if (setup.bridge === 'minksse-node') ({ writeSseResponse: minkWriteResponse } = await import(new URL('node.js', minkDirectory)));
     if (target === 'hono') {
       const { Hono } = await import('hono');
       const { streamSSE } = await import('hono/streaming');

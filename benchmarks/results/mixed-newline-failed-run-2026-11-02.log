@@ -1,0 +1,19 @@
+
+> bench
+> node --conditions=svelte run.mjs --loaders=4 --clients=16 --events=20000 --payload=multiline --repeats=6 --output=results/portable-optimized-all-multiline-2026-11-02.json
+
+native repeat 1/6 ... 1,532,787 events/s
+hono repeat 1/6 ... 300,115 events/s
+fastify repeat 1/6 ... 709,532 events/s
+better-sse repeat 1/6 ... file:///Users/ogie/WebProjects/minksse/benchmarks/load-workers.mjs:64
+        else if (message.type === 'failure') pending.reject(new Error(message.error));
+                                                            ^
+
+Error: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+    at Worker.<anonymous> (file:///Users/ogie/WebProjects/minksse/benchmarks/load-workers.mjs:64:61)
+    at Worker.emit (node:events:508:28)
+    at MessagePort.<anonymous> (node:internal/worker:332:53)
+    at [nodejs.internal.kHybridDispatch] (node:internal/event_target:845:20)
+    at MessagePort.<anonymous> (node:internal/per_context/messageport:23:28)
+
+Node.js v24.12.0

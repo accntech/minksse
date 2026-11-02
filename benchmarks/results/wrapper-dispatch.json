@@ -1,0 +1,491 @@
+{
+  "createdAt": "2026-11-02T02:25:22.352Z",
+  "node": "v24.12.0",
+  "methodology": "Diagnostic in-memory EventTarget dispatch with one reused MessageEvent and JSON value 1. Two warmups, nine measured rotated before/after repeats; GC before each timed run. Exact sum validates delivery. Excludes network, native SSE parsing and connection startup; not an HTTP throughput result.",
+  "source": {
+    "wrapperSha256": "906168c8946130fb626ce06dd6cb1006a360b6a1eb6384fb0ce10db8d01d222c",
+    "wrapperBeforeSha256": "8b1e3154902095b3a3a7571769001634a6ac39b625bd91efcbd17cc0d916e801",
+    "harnessSha256": "d742a26bcf111e42a41635b5a043c2d28215d0af71b2c876de382bb5ec8a640c"
+  },
+  "samples": [
+    {
+      "target": "before",
+      "repeat": 1,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 42.94745800000001,
+      "cpuMs": 62.813
+    },
+    {
+      "target": "after",
+      "repeat": 1,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 35.51237499999999,
+      "cpuMs": 54.909
+    },
+    {
+      "target": "after",
+      "repeat": 2,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 35.76716699999997,
+      "cpuMs": 55.668
+    },
+    {
+      "target": "before",
+      "repeat": 2,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 43.73983300000003,
+      "cpuMs": 64.403
+    },
+    {
+      "target": "before",
+      "repeat": 3,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 43.68908399999998,
+      "cpuMs": 65.085
+    },
+    {
+      "target": "after",
+      "repeat": 3,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 36.32712499999997,
+      "cpuMs": 56.163
+    },
+    {
+      "target": "after",
+      "repeat": 4,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 36.154083000000014,
+      "cpuMs": 56.799
+    },
+    {
+      "target": "before",
+      "repeat": 4,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 43.815083000000016,
+      "cpuMs": 64.368
+    },
+    {
+      "target": "before",
+      "repeat": 5,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 44.27616599999999,
+      "cpuMs": 65.545
+    },
+    {
+      "target": "after",
+      "repeat": 5,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 36.22029199999997,
+      "cpuMs": 55.751
+    },
+    {
+      "target": "after",
+      "repeat": 6,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 36.10120900000004,
+      "cpuMs": 56.056
+    },
+    {
+      "target": "before",
+      "repeat": 6,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 43.50341700000001,
+      "cpuMs": 64.959
+    },
+    {
+      "target": "before",
+      "repeat": 7,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 43.972582999999986,
+      "cpuMs": 64.625
+    },
+    {
+      "target": "after",
+      "repeat": 7,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 35.60220800000002,
+      "cpuMs": 55.594
+    },
+    {
+      "target": "after",
+      "repeat": 8,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 35.445875,
+      "cpuMs": 55.025
+    },
+    {
+      "target": "before",
+      "repeat": 8,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 44.90379199999995,
+      "cpuMs": 65.827
+    },
+    {
+      "target": "before",
+      "repeat": 9,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 45.07929100000001,
+      "cpuMs": 67.24
+    },
+    {
+      "target": "after",
+      "repeat": 9,
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "ms": 36.78341599999999,
+      "cpuMs": 57.378
+    },
+    {
+      "target": "before",
+      "repeat": 1,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 44.74416599999995,
+      "cpuMs": 67.729
+    },
+    {
+      "target": "after",
+      "repeat": 1,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 32.662415999999894,
+      "cpuMs": 56.386
+    },
+    {
+      "target": "after",
+      "repeat": 2,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 30.077792000000045,
+      "cpuMs": 51.656
+    },
+    {
+      "target": "before",
+      "repeat": 2,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 45.36054200000012,
+      "cpuMs": 69.714
+    },
+    {
+      "target": "before",
+      "repeat": 3,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 44.55358300000012,
+      "cpuMs": 67.517
+    },
+    {
+      "target": "after",
+      "repeat": 3,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 29.741042000000107,
+      "cpuMs": 51.926
+    },
+    {
+      "target": "after",
+      "repeat": 4,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 29.794374999999945,
+      "cpuMs": 50.982
+    },
+    {
+      "target": "before",
+      "repeat": 4,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 44.862041999999974,
+      "cpuMs": 68.437
+    },
+    {
+      "target": "before",
+      "repeat": 5,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 44.95187499999997,
+      "cpuMs": 67.695
+    },
+    {
+      "target": "after",
+      "repeat": 5,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 30.041584000000057,
+      "cpuMs": 52.001
+    },
+    {
+      "target": "after",
+      "repeat": 6,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 29.68399999999997,
+      "cpuMs": 50.626
+    },
+    {
+      "target": "before",
+      "repeat": 6,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 44.949416000000156,
+      "cpuMs": 68.867
+    },
+    {
+      "target": "before",
+      "repeat": 7,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 44.397040999999945,
+      "cpuMs": 67.298
+    },
+    {
+      "target": "after",
+      "repeat": 7,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 29.374917000000096,
+      "cpuMs": 50.938
+    },
+    {
+      "target": "after",
+      "repeat": 8,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 29.036749999999984,
+      "cpuMs": 49.809
+    },
+    {
+      "target": "before",
+      "repeat": 8,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 44.53958299999999,
+      "cpuMs": 67.116
+    },
+    {
+      "target": "before",
+      "repeat": 9,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 44.304165999999896,
+      "cpuMs": 66.039
+    },
+    {
+      "target": "after",
+      "repeat": 9,
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "ms": 29.70354199999997,
+      "cpuMs": 51.223
+    },
+    {
+      "target": "before",
+      "repeat": 1,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 57.62745899999982,
+      "cpuMs": 78.851
+    },
+    {
+      "target": "after",
+      "repeat": 1,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 39.93866600000001,
+      "cpuMs": 61.451
+    },
+    {
+      "target": "after",
+      "repeat": 2,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 40.25645799999984,
+      "cpuMs": 61.195
+    },
+    {
+      "target": "before",
+      "repeat": 2,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 57.4223750000001,
+      "cpuMs": 80.051
+    },
+    {
+      "target": "before",
+      "repeat": 3,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 56.873625000000175,
+      "cpuMs": 78.317
+    },
+    {
+      "target": "after",
+      "repeat": 3,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 39.5464579999998,
+      "cpuMs": 61.245
+    },
+    {
+      "target": "after",
+      "repeat": 4,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 40.17854099999977,
+      "cpuMs": 61.097
+    },
+    {
+      "target": "before",
+      "repeat": 4,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 57.54620799999975,
+      "cpuMs": 80.12
+    },
+    {
+      "target": "before",
+      "repeat": 5,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 58.80187500000011,
+      "cpuMs": 81.304
+    },
+    {
+      "target": "after",
+      "repeat": 5,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 39.76479100000006,
+      "cpuMs": 61.361
+    },
+    {
+      "target": "after",
+      "repeat": 6,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 41.03774999999996,
+      "cpuMs": 60.983
+    },
+    {
+      "target": "before",
+      "repeat": 6,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 58.98633299999983,
+      "cpuMs": 82.732
+    },
+    {
+      "target": "before",
+      "repeat": 7,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 63.42283300000008,
+      "cpuMs": 84.645
+    },
+    {
+      "target": "after",
+      "repeat": 7,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 50.83033300000034,
+      "cpuMs": 73.863
+    },
+    {
+      "target": "after",
+      "repeat": 8,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 42.77904199999966,
+      "cpuMs": 66.03
+    },
+    {
+      "target": "before",
+      "repeat": 8,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 62.232166000000234,
+      "cpuMs": 87.892
+    },
+    {
+      "target": "before",
+      "repeat": 9,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 61.48216700000012,
+      "cpuMs": 86.993
+    },
+    {
+      "target": "after",
+      "repeat": 9,
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "ms": 41.98624999999993,
+      "cpuMs": 66.21
+    }
+  ],
+  "summary": [
+    {
+      "idleTimeoutMs": 75000,
+      "listeners": 1,
+      "eventsPerRepeat": 500000,
+      "repeats": 9,
+      "before": {
+        "medianMs": 43.815083000000016,
+        "medianCpuMs": 64.959
+      },
+      "after": {
+        "medianMs": 36.10120900000004,
+        "medianCpuMs": 55.751
+      },
+      "elapsedReductionPct": 17.605521824527802
+    },
+    {
+      "idleTimeoutMs": 0,
+      "listeners": 1,
+      "eventsPerRepeat": 500000,
+      "repeats": 9,
+      "before": {
+        "medianMs": 44.74416599999995,
+        "medianCpuMs": 67.695
+      },
+      "after": {
+        "medianMs": 29.741042000000107,
+        "medianCpuMs": 51.223
+      },
+      "elapsedReductionPct": 33.5309054592723
+    },
+    {
+      "idleTimeoutMs": 75000,
+      "listeners": 4,
+      "eventsPerRepeat": 500000,
+      "repeats": 9,
+      "before": {
+        "medianMs": 58.80187500000011,
+        "medianCpuMs": 81.304
+      },
+      "after": {
+        "medianMs": 40.25645799999984,
+        "medianCpuMs": 61.361
+      },
+      "elapsedReductionPct": 31.538819127791818
+    }
+  ]
+}

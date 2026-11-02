@@ -1,0 +1,370 @@
+{
+  "createdAt": "2026-11-02T02:13:06.910Z",
+  "options": {
+    "clients": 1,
+    "events": 20000,
+    "bytes": 128,
+    "batch": 16,
+    "repeats": 7,
+    "warmup": 2,
+    "timeout": 30000,
+    "output": "benchmarks/results/native-client-1.json"
+  },
+  "environment": {
+    "node": "v24.12.0",
+    "v8": "13.6.233.17-node.37",
+    "cpu": "Apple M4 Pro",
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "source": {
+    "commit": "59e781d027a0d27bb93540b7c8125406feeae078",
+    "wrapperSha256": "8b1e3154902095b3a3a7571769001634a6ac39b625bd91efcbd17cc0d916e801",
+    "baselineSha256": "68a746026e13726cc0b190982d01351efedfd3e83b267bf6072b74a1c77d5098",
+    "baselineParserSha256": "89bf1f7e97cdfb36a7523f09eea9ea5d9c10d461f699df35d8a103d964f998d6",
+    "harnessSha256": "ee520b9ceb9510dcdb2313a94099a4e9d8636575257701d92e55428f965d6583",
+    "measuredHarnessSha256": "c57bc614acd9c89f4b7023614b0300758841200efc86ae9fa521a09479c5f0a9",
+    "postMeasurementChange": "Only the default output path was anchored to the harness directory via fileURLToPath(new URL(..., import.meta.url)); measured code, source wrapper and timings unchanged. measuredHarnessSha256 identifies the harness used during measurement; harnessSha256 identifies the current reproducible harness."
+  },
+  "methodology": "Native Node EventSource (--experimental-eventsource), native wrapper GET, historical Fetch POST. Same isolated Node HTTP server, preframed identical JSON events; yield every batch. Exact count/order/payload validation and completion sentinel. Close immediately on done; no retries. Sequential rotated candidates; full warmup passes. Throughput includes connection startup and independent JSON validation. Completion is final validated sentinel, not EOF. CPU is client process only. Loopback Node measurements do not establish browser performance, server improvements, replay or WAN latency.",
+  "samples": [
+    {
+      "target": "fetch-before",
+      "repeat": 1,
+      "elapsedMs": 26.821124999999995,
+      "eventsPerSecond": 745680.8765478706,
+      "clientCpuMs": 41.587,
+      "firstEventMs": [
+        0.962333000000001
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "native",
+      "repeat": 1,
+      "elapsedMs": 32.93350000000004,
+      "eventsPerSecond": 607284.3760912134,
+      "clientCpuMs": 45.137,
+      "firstEventMs": [
+        0.8344579999999837
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "wrapper",
+      "repeat": 1,
+      "elapsedMs": 33.09800000000001,
+      "eventsPerSecond": 604266.1187987187,
+      "clientCpuMs": 43.432,
+      "firstEventMs": [
+        1.2547500000000014
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "native",
+      "repeat": 2,
+      "elapsedMs": 31.780249999999967,
+      "eventsPerSecond": 629321.6699050517,
+      "clientCpuMs": 32.808,
+      "firstEventMs": [
+        1.1180830000000128
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "wrapper",
+      "repeat": 2,
+      "elapsedMs": 32.594041000000004,
+      "eventsPerSecond": 613609.0949876389,
+      "clientCpuMs": 34.793,
+      "firstEventMs": [
+        0.9791660000000206
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "fetch-before",
+      "repeat": 2,
+      "elapsedMs": 25.570959000000016,
+      "eventsPerSecond": 782137.267515074,
+      "clientCpuMs": 41.322,
+      "firstEventMs": [
+        0.9673329999999964
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "wrapper",
+      "repeat": 3,
+      "elapsedMs": 30.624792000000014,
+      "eventsPerSecond": 653065.6600051353,
+      "clientCpuMs": 31.603,
+      "firstEventMs": [
+        0.7323749999999905
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "fetch-before",
+      "repeat": 3,
+      "elapsedMs": 24.999250000000075,
+      "eventsPerSecond": 800024.0007200192,
+      "clientCpuMs": 26.118,
+      "firstEventMs": [
+        1.08966700000002
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "native",
+      "repeat": 3,
+      "elapsedMs": 30.264875000000075,
+      "eventsPerSecond": 660832.0701803643,
+      "clientCpuMs": 32.794,
+      "firstEventMs": [
+        0.7514580000000706
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "fetch-before",
+      "repeat": 4,
+      "elapsedMs": 25.962582999999995,
+      "eventsPerSecond": 770339.3764788351,
+      "clientCpuMs": 27.942,
+      "firstEventMs": [
+        0.7396250000000464
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "native",
+      "repeat": 4,
+      "elapsedMs": 29.87620800000002,
+      "eventsPerSecond": 669428.998486019,
+      "clientCpuMs": 30.302,
+      "firstEventMs": [
+        0.6161670000000186
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "wrapper",
+      "repeat": 4,
+      "elapsedMs": 31.507625000000075,
+      "eventsPerSecond": 634766.9810085639,
+      "clientCpuMs": 32.995,
+      "firstEventMs": [
+        0.648166999999944
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "native",
+      "repeat": 5,
+      "elapsedMs": 30.22316699999999,
+      "eventsPerSecond": 661744.0190831096,
+      "clientCpuMs": 34.095,
+      "firstEventMs": [
+        0.7394170000000031
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "wrapper",
+      "repeat": 5,
+      "elapsedMs": 32.31904199999997,
+      "eventsPerSecond": 618830.2239899321,
+      "clientCpuMs": 33.27,
+      "firstEventMs": [
+        0.731708000000026
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "fetch-before",
+      "repeat": 5,
+      "elapsedMs": 25.056916,
+      "eventsPerSecond": 798182.8250531709,
+      "clientCpuMs": 25.782,
+      "firstEventMs": [
+        0.9097080000000233
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "wrapper",
+      "repeat": 6,
+      "elapsedMs": 33.50233300000002,
+      "eventsPerSecond": 596973.3510797587,
+      "clientCpuMs": 37.667,
+      "firstEventMs": [
+        0.6635410000000093
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "fetch-before",
+      "repeat": 6,
+      "elapsedMs": 24.97420800000009,
+      "eventsPerSecond": 800826.1963702685,
+      "clientCpuMs": 33.26,
+      "firstEventMs": [
+        0.8389579999999341
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "native",
+      "repeat": 6,
+      "elapsedMs": 29.881124999999997,
+      "eventsPerSecond": 669318.8425803916,
+      "clientCpuMs": 32.174,
+      "firstEventMs": [
+        0.6963339999999789
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "fetch-before",
+      "repeat": 7,
+      "elapsedMs": 25.29783299999997,
+      "eventsPerSecond": 790581.5490204251,
+      "clientCpuMs": 26.288,
+      "firstEventMs": [
+        0.8183339999999362
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "native",
+      "repeat": 7,
+      "elapsedMs": 29.92095800000004,
+      "eventsPerSecond": 668427.7956608199,
+      "clientCpuMs": 30.331,
+      "firstEventMs": [
+        0.645832999999925
+      ],
+      "validatedEvents": 20000
+    },
+    {
+      "target": "wrapper",
+      "repeat": 7,
+      "elapsedMs": 30.637000000000057,
+      "eventsPerSecond": 652805.4313411876,
+      "clientCpuMs": 31.292,
+      "firstEventMs": [
+        0.7491670000000568
+      ],
+      "validatedEvents": 20000
+    }
+  ],
+  "summary": {
+    "native": {
+      "eventsPerSecond": {
+        "count": 7,
+        "mean": 652336.824569567,
+        "median": 661744.0190831096,
+        "min": 607284.3760912134,
+        "max": 669428.998486019,
+        "ci95": [
+          629809.6876736439,
+          674863.96146549
+        ]
+      },
+      "elapsedMs": {
+        "count": 7,
+        "mean": 30.697154714285734,
+        "median": 30.22316699999999,
+        "min": 29.87620800000002,
+        "max": 32.93350000000004,
+        "ci95": [
+          29.59450354617485,
+          31.79980588239662
+        ]
+      },
+      "clientCpuMs": {
+        "count": 7,
+        "mean": 33.94871428571428,
+        "median": 32.794,
+        "min": 30.302,
+        "max": 45.137,
+        "ci95": [
+          29.212079338248913,
+          38.68534923317965
+        ]
+      }
+    },
+    "wrapper": {
+      "eventsPerSecond": {
+        "count": 7,
+        "mean": 624902.4087444192,
+        "median": 618830.2239899321,
+        "min": 596973.3510797587,
+        "max": 653065.6600051353,
+        "ci95": [
+          604086.2721457788,
+          645718.5453430597
+        ]
+      },
+      "elapsedMs": {
+        "count": 7,
+        "mean": 32.040404714285735,
+        "median": 32.31904199999997,
+        "min": 30.624792000000014,
+        "max": 33.50233300000002,
+        "ci95": [
+          30.979326660935847,
+          33.10148276763562
+        ]
+      },
+      "clientCpuMs": {
+        "count": 7,
+        "mean": 35.007428571428576,
+        "median": 33.27,
+        "min": 31.292,
+        "max": 43.432,
+        "ci95": [
+          31.037341440177812,
+          38.97751570267934
+        ]
+      }
+    },
+    "fetch-before": {
+      "eventsPerSecond": {
+        "count": 7,
+        "mean": 783967.4416722377,
+        "median": 790581.5490204251,
+        "min": 745680.8765478706,
+        "max": 800826.1963702685,
+        "ci95": [
+          765305.69444751,
+          802629.1888969655
+        ]
+      },
+      "elapsedMs": {
+        "count": 7,
+        "mean": 25.52612485714288,
+        "median": 25.29783299999997,
+        "min": 24.97420800000009,
+        "max": 26.821124999999995,
+        "ci95": [
+          24.902944088477664,
+          26.149305625808093
+        ]
+      },
+      "clientCpuMs": {
+        "count": 7,
+        "mean": 31.757,
+        "median": 27.942,
+        "min": 25.782,
+        "max": 41.587,
+        "ci95": [
+          25.191658522975885,
+          38.32234147702412
+        ]
+      }
+    }
+  }
+}
