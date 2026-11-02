@@ -23,7 +23,7 @@ Or use the root shortcut, after installing benchmark dependencies:
 npm run bench:compare
 ```
 
-The default comparison uses 16 clients, 1,000 events per client, 128 payload
+The default comparison uses the **optimized** setup, 16 clients, 1,000 events per client, 128 payload
 bytes, batches of 16 events, one full warmup workload per fresh server, and five
 measured repeats. Outputs are `benchmarks/results/latest.json` and `.md` when
 invoked through npm. Each complete comparison usually takes seconds to a minute,
@@ -35,13 +35,16 @@ Every argument uses `--name=value`:
 npm --prefix benchmarks run bench -- --clients=1 --events=20000 --repeats=5 --output=results/clients-1.json
 npm --prefix benchmarks run bench -- --clients=16 --events=20000 --repeats=5 --output=results/clients-16.json
 npm --prefix benchmarks run bench -- --targets=native,hono --bytes=1024 --batch=8 --interval=1
+npm --prefix benchmarks run bench -- --setup=baseline --clients=16 --events=20000
+npm --prefix benchmarks run bench -- --targets=minksse --profile=profiles --events=50000 --repeats=1
 ```
 
 | Option | Meaning |
 | --- | --- |
 | `clients` | Concurrent finite HTTP streams per workload pass |
 | `events` | Number of events delivered on each stream |
-| `bytes` | ASCII `x` characters in the JSON payload field; excludes JSON and SSE framing |
+| `bytes` | Raw UTF-8 bytes in the JSON payload field; excludes JSON and SSE framing |
+| `payload` | `ascii` (default), `unicode` (`é😀` plus ASCII remainder), or `multiline` (mixed CRLF/CR/LF JSON whitespace) |
 | `batch` | Events per producer batch before yielding the event loop |
 | `interval` | Delay in milliseconds between batches; zero uses `setImmediate` |
 | `warmup` | Full validated passes before measurement in each fresh server process; may be zero |
@@ -49,6 +52,22 @@ npm --prefix benchmarks run bench -- --targets=native,hono --bytes=1024 --batch=
 | `timeout` | Milliseconds allowed for a workload or server control response |
 | `targets` | Comma-separated subset: `native,hono,fastify,better-sse,sveltekit-sse,minksse` |
 | `output` | JSON path relative to the command's working directory; sibling Markdown also written |
+| `setup` | `optimized` (default) or original `baseline` setup |
+| `bridge` | Web producer transport: `auto`, `pipeline`, `direct`, `hono-node`, `kit`, or `minksse-node` |
+| `fastify` | `auto`, per-event `send`, `iterable`, or `stream` |
+| `better` | `auto`, per-event `push`, or public `batch` |
+| `cork` | Native output: `auto`, `on`, or `off` |
+| `native` | `auto`, per-event `write`, or one framed `batch` write |
+| `coalesce` | MinkSSE output target in bytes: `auto`, or integer 0–262,144. `auto` selects 16,384 for optimized and 0 for baseline. The library itself defaults to 0 (off). |
+| `minkapi` | `auto`, `emit`, or `batch`. Optimized auto uses public `emitBatch()`, baseline auto uses scalar `emit()`. Batch array assembly remains inside timing. |
+| `minkbuild` | Optional directory containing a different compiled `server.js` and `node.js`; actual selected source hashes are recorded. Use `--minkapi=emit` with builds predating the batch API. |
+| `loaders` | 1 by default; up to 32 client workers, never more than clients. Workers persist through warmup and measured pass; startup is excluded. Client CPU is counted once for the entire process. |
+| `profile` | Directory for V8 CPU profiles; includes startup/warmup and uses graceful shutdown |
+
+`auto` resolves per candidate and setup. JSON reports record the effective
+settings and benchmark source hashes. Explicit overrides are experiments; they
+are not automatically faster. See [optimization analysis](OPTIMIZATION.md) for
+selection evidence, fresh comparisons, and MinkSSE recommendations.
 
 The server binds an ephemeral port on `127.0.0.1`. The harness kills and reaps
 the child server after each sample, including timeout and correctness failures.
@@ -63,7 +82,10 @@ requests from the same Node `fetch` client. The client runs outside the server
 process and independently parses and validates every delivered event. Each
 connection receives named `message` events with IDs `1..events` and JSON
 `{ "sequence": 0, "payload": "xxx..." }`. JSON strings are prepared before
-timing for every candidate; framing and delivery remain inside timing.
+timing for every candidate; framing and delivery remain inside timing. Unicode
+payloads have the requested exact UTF-8 size. Multiline mode adds mixed JSON
+whitespace line endings; each candidate performs its SSE newline escaping during
+measurement, including native.
 
 Each repeat starts a fresh server, imports dependencies, precomputes JSON,
 performs full warmup passes, and measures one pass. Startup, module import,
@@ -100,25 +122,40 @@ intervals and small sample counts cannot establish a reliable ranking.
 ## Adapter differences and limits
 
 - **Native:** Handwritten SSE framing on Node `http.ServerResponse`, awaiting
-  `drain` when necessary. This is the zero-library server baseline.
-- **Hono:** A real Hono POST route and `streamSSE().writeSSE()`.
+  `drain` when necessary. Optimized mode frames and joins each shared batch
+  inside timing and performs one write. Baseline uses individual writes.
+  Explicit per-batch corking lost in selection trials and remains off.
+- **Hono:** A real Hono POST route and `streamSSE().writeSSE()`, using official
+  `@hono/node-server` in optimized mode. Its default listener also replaces
+  global `Request`/`Response` with the adapter's lightweight implementations;
+  this is a whole supported Node setup, not a bridge-only ablation.
 - **Fastify:** A real Fastify POST route registered with the official SSE
   plugin, using `reply.sse.send()`. The `fastify` label means Fastify plus
-  `@fastify/sse`.
+  `@fastify/sse`. Per-event send beat the tested iterable and Node stream paths.
 - **Better SSE:** `createSession(req, res)` and `session.push()`, with an identity
-  serializer to avoid double JSON encoding. Random UUID IDs, retry preambles
+  serializer to avoid double JSON encoding; optimized mode uses the public
+  `session.batch()` API for each common production batch. Random UUID IDs, retry preambles
   and keepalive output are disabled in favor of the shared ID/workload policy.
 - **sveltekit-sse:** The real published `produce()` API. Its published package
   exposes a `svelte` export condition and extensionless imports. The harness
   bundles the public export with esbuild before starting the server, as a
   bundler would; it does not rewrite or replace the package implementation.
   This measures the producer, excluding SvelteKit routing, generated application
-  code, browser stores and the package's `source()` client.
+  code, browser stores and the package's `source()` client. Optimized mode uses
+  SvelteKit's public Node `setResponse()` writer.
 - **MinkSSE:** `produce()` from this checkout's `dist/server.js`, including its
-  queue bound. A SHA-256 hash identifies that compiled file in each report.
+  queue bound. Optimized mode opts into `coalesceBytes: 16_384` and uses the
+  supported `writeSseResponse()` from `minksse/node` and public `emitBatch()` for
+  each common production batch; baseline disables
+  coalescing and retains the old pipeline. `--coalesce=0` measures the adapter
+  independently. Add `--minkapi=emit` for the prior scalar producer path.
+  SHA-256 hashes identify both compiled modules in new reports.
 
-Hono, sveltekit-sse and MinkSSE share the identical Web Response → Node HTTP
-adapter in `server.mjs`, implemented with `Readable.fromWeb()` and `pipeline()`.
+In baseline mode Hono, sveltekit-sse and MinkSSE share the identical Web Response
+→ Node HTTP adapter, implemented with `Readable.fromWeb()` and `pipeline()`.
+Optimized mode uses the per-candidate adapters above; `--bridge=direct` applies
+the same direct-reader bridge to all three for a producer comparison.
+With MinkSSE add `--coalesce=0` to reproduce the previous unbatched producer comparison.
 Fastify uses its own HTTP integration; Better SSE uses its native Node
 integration. The results include these integration costs, so they are not a
 pure encoder microbenchmark or an interchangeable-framework overhead estimate.
@@ -138,8 +175,26 @@ process memory, not per-connection allocation.
 
 ## Recorded runs
 
-- [One client](results/clients-1.md): 20,000 events, five repeats.
-- [Sixteen clients](results/clients-16.md): 20,000 events per client, five repeats.
+- **Latest optimization and all-project comparison:** [Owned native output](OWNED-OUTPUT-OPTIMIZATION-2026-11-02.md), with an 18-repeat before/after control, profiles, ownership/queue safety checks and fresh results for all six implementations.
+- [Earlier four-loader hot path](FOUR-LOADER-HOTPATH-2026-11-02.md), including the preceding batch-loop/callback-writer pass.
+- [Earlier native queue allocation pass](NATIVE-QUEUE-OPTIMIZATION-2026-11-02.md), including controlled before/after results and verification.
+- [Earlier November 2 all-project run](FRESH-COMPARISON-2026-11-02.md), using the preceding Node queue build.
+- [Four-loader optimization report](FOUR-LOADER-OPTIMIZATION.md), with native UTF-8 counting, repeated controls and held-out payloads.
+- [Previous native-gap report](NATIVE-PERFORMANCE.md), including explicit batch/scalar results and client-CPU controls.
+- Latest all-package results: [one client](results/native-pass-clients-1.md), [16 clients / one loader](results/native-pass-clients-16.md), [16 clients / four loaders](results/native-pass-parallel.md), [1 KiB](results/native-pass-large.md), [sparse](results/native-pass-sparse.md).
+- [Implemented features and rerun analysis](IMPLEMENTATION.md): Node adapter, opt-in coalescing, fresh all-package results and isolated ablations.
+- Implemented optimized results: [one client](results/implemented-clients-1.md), [sixteen clients](results/implemented-clients-16.md), [1 KiB](results/implemented-large-payload.md), and [sparse](results/implemented-sparse.md).
+- Original run: [one client](results/clients-1.md) and [sixteen clients](results/clients-16.md).
+- Fresh baseline: [one client](results/baseline-clients-1.md) and [sixteen clients](results/baseline-clients-16.md).
+- Optimized: [one client](results/optimized-clients-1.md) and [sixteen clients](results/optimized-clients-16.md).
+- Held-out workloads: [1 KiB payloads](results/optimized-large-payload.md) and [sparse events](results/optimized-sparse.md), with adjacent baseline reports.
+- [Setup selection samples](results/setup-selection.json): three repeats per tested strategy.
+- [Native batching selection](results/native-selection.json): three repeats at one and sixteen clients.
+
+Profile runs are diagnostic only; instrumentation changes performance. Profile
+throughput must not be used as an uninstrumented score. Raw `.cpuprofile` files
+are local ignored artifacts in `profiles/`; the analysis records their hashes
+and sampled-stack summaries.
 
 Raw `.json` files beside the reports include every trial, versions, CPU/OS/
 runtime metadata, workload options, dependency lock hash, source commit and local

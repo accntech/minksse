@@ -1,0 +1,20 @@
+{
+  "runtime": "Node v24.12.0",
+  "method": "Existing scripts/benchmark.mjs seven samples after three warmups;alternating before/current;coalescingoff; lower ms better.",
+  "baselineServerSha256": "7d28be63fe45d280c4835a72ab17bb3a7f0b9324500fac677f7b139c5875e096",
+  "currentServerSha256": "daf5685c02d61b799144351d9bd747d720cf081b17b459df69751b25fa3c1b0f",
+  "tasks": {
+    "parser batched": {
+      "beforeMs": 32.58,
+      "afterMs": 32.44
+    },
+    "parser fragmented": {
+      "beforeMs": 6.99,
+      "afterMs": 7.07
+    },
+    "producer drained": {
+      "beforeMs": 5.91,
+      "afterMs": 6.07
+    }
+  }
+}

@@ -1,0 +1,1942 @@
+{
+  "schemaVersion": 4,
+  "createdAt": "2026-11-02T00:31:42.534Z",
+  "environment": {
+    "node": "v24.12.0",
+    "v8": "13.6.233.17-node.37",
+    "os": "darwin",
+    "osRelease": "27.2.0",
+    "arch": "arm64",
+    "cpu": "Apple M4 Pro",
+    "logicalCpus": 14,
+    "availableParallelism": 14
+  },
+  "versions": {
+    "@hono/node-server": "2.1.5",
+    "hono": "4.13.16",
+    "fastify": "5.12.7",
+    "@fastify/sse": "0.6.1",
+    "better-sse": "0.16.1",
+    "sveltekit-sse": "0.15.1",
+    "svelte": "5.57.3",
+    "@sveltejs/kit": "2.70.3",
+    "esbuild": "0.28.2"
+  },
+  "source": {
+    "commit": "8868f9001c4d21c71cdcc94315f7d2d946f5b5e4",
+    "dirty": true,
+    "minkBuildDirectory": "/Users/ogie/WebProjects/minksse/dist/",
+    "localServerSha256": "76e6845155877f8f65d6fe4e588dfa61b24dd4224b5d99ab18fa4fd9ff1c55ad",
+    "localNodeSha256": "ef770dfed6b41d9e49a82fce4c47218964f625400a95ed45ea996d0d85ae3014",
+    "localCapabilitiesSha256": "e959a1381b1841fdd1766f82bf910752d1b8825ade52e48c291560227760bd46",
+    "lockSha256": "b2d3ec5a24de12363efdc50a4bdc747c8a1751814eed1d65870347e417f53878",
+    "benchmarkServerSha256": "8c677689d5019c5ef68b88b1cd6a77c25bc23b26a45b59b2d59470f852c35b38",
+    "benchmarkHarnessSha256": "898d53ec79f9f59f333378555f36ad67a4695a50bedef70b7cddef9b8ad926b4",
+    "benchmarkCoreSha256": "ac871497bec523809bb36e736e7900de11d1c650ddf245c0d4e9d6582efa7d34",
+    "benchmarkLoaderSha256": "cb78cfe81b627fd8e29f246d485e44dfee32b95572d7da025b341b9706a0fccd",
+    "benchmarkWorkerSha256": "e788b7ced4be76d93d5201214a75f25a23ad391ed6e50f7dbbc79a7f1000d548"
+  },
+  "options": {
+    "events": 20000,
+    "clients": 1,
+    "bytes": 128,
+    "batch": 16,
+    "interval": 0,
+    "repeats": 7,
+    "warmup": 1,
+    "timeout": 30000,
+    "loaders": 1,
+    "payload": "ascii",
+    "targets": [
+      "native",
+      "hono",
+      "fastify",
+      "better-sse",
+      "sveltekit-sse",
+      "minksse"
+    ],
+    "output": "results/fresh-all-single-2026-11-02.json",
+    "setup": "optimized",
+    "bridge": "auto",
+    "fastify": "auto",
+    "better": "auto",
+    "cork": "auto",
+    "native": "auto",
+    "minkapi": "auto",
+    "coalesce": "auto",
+    "profile": "",
+    "minkbuild": ""
+  },
+  "effectiveSetup": {
+    "native": {
+      "bridge": "direct",
+      "fastify": "send",
+      "better": "batch",
+      "cork": "off",
+      "native": "batch",
+      "minkApi": "batch",
+      "coalesceBytes": 16384
+    },
+    "hono": {
+      "bridge": "hono-node",
+      "fastify": "send",
+      "better": "batch",
+      "cork": "off",
+      "native": "batch",
+      "minkApi": "batch",
+      "coalesceBytes": 16384
+    },
+    "fastify": {
+      "bridge": "direct",
+      "fastify": "send",
+      "better": "batch",
+      "cork": "off",
+      "native": "batch",
+      "minkApi": "batch",
+      "coalesceBytes": 16384
+    },
+    "better-sse": {
+      "bridge": "direct",
+      "fastify": "send",
+      "better": "batch",
+      "cork": "off",
+      "native": "batch",
+      "minkApi": "batch",
+      "coalesceBytes": 16384
+    },
+    "sveltekit-sse": {
+      "bridge": "kit",
+      "fastify": "send",
+      "better": "batch",
+      "cork": "off",
+      "native": "batch",
+      "minkApi": "batch",
+      "coalesceBytes": 16384
+    },
+    "minksse": {
+      "bridge": "minksse-node",
+      "fastify": "send",
+      "better": "batch",
+      "cork": "off",
+      "native": "batch",
+      "minkApi": "batch",
+      "coalesceBytes": 16384
+    }
+  },
+  "methodology": {
+    "transport": "HTTP/1.1 POST over 127.0.0.1, Node fetch with 1 client loader(s), isolated fresh server process per repeat; workers persist through warmup",
+    "payload": "Pre-serialized JSON {sequence,payload}; ascii payload with 128 raw UTF-8 bytes, named message events, IDs 1..events; multiline mode adds mixed JSON whitespace line endings",
+    "schedule": "All candidates yield each batch; native/Hono/Fastify also await backpressure where their APIs expose it",
+    "order": "Rotated candidate order by repeat; sequential measured trials",
+    "warmup": "Each fresh server gets warmup full workload passes before its one measured pass",
+    "firstEvent": "Request start until first chunk containing a complete validated event is processed; not per-event latency",
+    "memory": "Server RSS before/after measured workload; processPeakRssBytes includes imports and warmup",
+    "cpu": "Server CPU user+system delta covering measured workload and stats IPC; excludes startup and warmup",
+    "clientCpu": "Parent process user+system CPU delta covering fetch, body parsing and independent validation; high utilization can cap throughput",
+    "scope": "Server framing/HTTP delivery only. No package clients, Kit routing/build, browser UI, broadcast, replay, slow consumers or production network"
+  },
+  "samples": [
+    {
+      "target": "native",
+      "repeat": 1,
+      "elapsedMs": 30.93670800000001,
+      "clientCpuMs": 35.404,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 646481.1963832737,
+      "wireMiBPerSecond": 117.68939818634607,
+      "firstEventMs": [
+        0.8427499999999952
+      ],
+      "server": {
+        "cpuMs": 26.198,
+        "rssBeforeBytes": 79265792,
+        "rssAfterBytes": 82755584,
+        "processPeakRssBytes": 82755584,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": 1250
+      }
+    },
+    {
+      "target": "hono",
+      "repeat": 1,
+      "elapsedMs": 81.62020799999999,
+      "clientCpuMs": 40.436,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 245037.35643506327,
+      "wireMiBPerSecond": 44.60810178757102,
+      "firstEventMs": [
+        1.1036250000000223
+      ],
+      "server": {
+        "cpuMs": 102.622,
+        "rssBeforeBytes": 90816512,
+        "rssAfterBytes": 108036096,
+        "processPeakRssBytes": 108036096,
+        "fatal": null,
+        "setup": {
+          "bridge": "hono-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "fastify",
+      "repeat": 1,
+      "elapsedMs": 46.116333000000054,
+      "clientCpuMs": 31.968,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 433685.82666796114,
+      "wireMiBPerSecond": 78.9508252181871,
+      "firstEventMs": [
+        0.7610409999999774
+      ],
+      "server": {
+        "cpuMs": 45.165,
+        "rssBeforeBytes": 98123776,
+        "rssAfterBytes": 98369536,
+        "processPeakRssBytes": 98369536,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "better-sse",
+      "repeat": 1,
+      "elapsedMs": 36.72825,
+      "clientCpuMs": 25.816,
+      "events": 20000,
+      "wireBytes": 3757784,
+      "eventsPerSecond": 544539.9658301171,
+      "wireMiBPerSecond": 97.57345061096959,
+      "firstEventMs": [
+        0.8897499999999354
+      ],
+      "server": {
+        "cpuMs": 26.049,
+        "rssBeforeBytes": 84295680,
+        "rssAfterBytes": 85098496,
+        "processPeakRssBytes": 85098496,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "sveltekit-sse",
+      "repeat": 1,
+      "elapsedMs": 79.45495800000003,
+      "clientCpuMs": 48.476,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 251714.94018032195,
+      "wireMiBPerSecond": 45.82373004824591,
+      "firstEventMs": [
+        1.1581670000000486
+      ],
+      "server": {
+        "cpuMs": 92.323,
+        "rssBeforeBytes": 100139008,
+        "rssAfterBytes": 100548608,
+        "processPeakRssBytes": 100548608,
+        "fatal": null,
+        "setup": {
+          "bridge": "kit",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "minksse",
+      "repeat": 1,
+      "elapsedMs": 36.39324999999985,
+      "clientCpuMs": 25.596,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 549552.4582168418,
+      "wireMiBPerSecond": 100.04389677719725,
+      "firstEventMs": [
+        0.6926659999999174
+      ],
+      "server": {
+        "cpuMs": 37.111,
+        "rssBeforeBytes": 83066880,
+        "rssAfterBytes": 86622208,
+        "processPeakRssBytes": 86622208,
+        "fatal": null,
+        "setup": {
+          "bridge": "minksse-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "hono",
+      "repeat": 2,
+      "elapsedMs": 82.99370799999997,
+      "clientCpuMs": 32.172,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 240982.1236086958,
+      "wireMiBPerSecond": 43.86986235615259,
+      "firstEventMs": [
+        0.8749170000000959
+      ],
+      "server": {
+        "cpuMs": 104.75,
+        "rssBeforeBytes": 90931200,
+        "rssAfterBytes": 108314624,
+        "processPeakRssBytes": 108314624,
+        "fatal": null,
+        "setup": {
+          "bridge": "hono-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "fastify",
+      "repeat": 2,
+      "elapsedMs": 47.86291700000015,
+      "clientCpuMs": 31.659,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 417860.0313892264,
+      "wireMiBPerSecond": 76.06980047594482,
+      "firstEventMs": [
+        0.6350830000001224
+      ],
+      "server": {
+        "cpuMs": 47.015,
+        "rssBeforeBytes": 98140160,
+        "rssAfterBytes": 98402304,
+        "processPeakRssBytes": 98402304,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "better-sse",
+      "repeat": 2,
+      "elapsedMs": 37.584292000000005,
+      "clientCpuMs": 26.074,
+      "events": 20000,
+      "wireBytes": 3757784,
+      "eventsPerSecond": 532137.2024248854,
+      "wireMiBPerSecond": 95.35106015572525,
+      "firstEventMs": [
+        0.775333000000046
+      ],
+      "server": {
+        "cpuMs": 26.688,
+        "rssBeforeBytes": 84492288,
+        "rssAfterBytes": 85229568,
+        "processPeakRssBytes": 85229568,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "sveltekit-sse",
+      "repeat": 2,
+      "elapsedMs": 80.29149999999981,
+      "clientCpuMs": 33.441,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 249092.36967798643,
+      "wireMiBPerSecond": 45.34630124467381,
+      "firstEventMs": [
+        1.0913750000001983
+      ],
+      "server": {
+        "cpuMs": 93.767,
+        "rssBeforeBytes": 99139584,
+        "rssAfterBytes": 99549184,
+        "processPeakRssBytes": 99549184,
+        "fatal": null,
+        "setup": {
+          "bridge": "kit",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "minksse",
+      "repeat": 2,
+      "elapsedMs": 36.07337500000017,
+      "clientCpuMs": 25.509,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 554425.5285234583,
+      "wireMiBPerSecond": 100.9310203546716,
+      "firstEventMs": [
+        0.7374589999999444
+      ],
+      "server": {
+        "cpuMs": 36.569,
+        "rssBeforeBytes": 82935808,
+        "rssAfterBytes": 86425600,
+        "processPeakRssBytes": 86425600,
+        "fatal": null,
+        "setup": {
+          "bridge": "minksse-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "native",
+      "repeat": 2,
+      "elapsedMs": 32.53929199999993,
+      "clientCpuMs": 24.637,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 614641.5232390441,
+      "wireMiBPerSecond": 111.8931089953256,
+      "firstEventMs": [
+        0.5543339999999262
+      ],
+      "server": {
+        "cpuMs": 27.928,
+        "rssBeforeBytes": 79085568,
+        "rssAfterBytes": 82952192,
+        "processPeakRssBytes": 83050496,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": 1250
+      }
+    },
+    {
+      "target": "fastify",
+      "repeat": 3,
+      "elapsedMs": 46.957540999999765,
+      "clientCpuMs": 30.183,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 425916.6807733842,
+      "wireMiBPerSecond": 77.53648229550046,
+      "firstEventMs": [
+        0.6729999999997744
+      ],
+      "server": {
+        "cpuMs": 45.779,
+        "rssBeforeBytes": 98205696,
+        "rssAfterBytes": 98467840,
+        "processPeakRssBytes": 98467840,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "better-sse",
+      "repeat": 3,
+      "elapsedMs": 36.68687499999987,
+      "clientCpuMs": 24.741,
+      "events": 20000,
+      "wireBytes": 3757784,
+      "eventsPerSecond": 545154.0912110958,
+      "wireMiBPerSecond": 97.68349273145658,
+      "firstEventMs": [
+        0.7350420000002487
+      ],
+      "server": {
+        "cpuMs": 26.151,
+        "rssBeforeBytes": 84344832,
+        "rssAfterBytes": 85065728,
+        "processPeakRssBytes": 85065728,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "sveltekit-sse",
+      "repeat": 3,
+      "elapsedMs": 81.17787499999986,
+      "clientCpuMs": 34.139,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 246372.54917057185,
+      "wireMiBPerSecond": 44.851168454295276,
+      "firstEventMs": [
+        0.9240829999998823
+      ],
+      "server": {
+        "cpuMs": 93.793,
+        "rssBeforeBytes": 98959360,
+        "rssAfterBytes": 99270656,
+        "processPeakRssBytes": 99270656,
+        "fatal": null,
+        "setup": {
+          "bridge": "kit",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "minksse",
+      "repeat": 3,
+      "elapsedMs": 43.283957999999984,
+      "clientCpuMs": 30.25,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 462064.9525627949,
+      "wireMiBPerSecond": 84.11713518404947,
+      "firstEventMs": [
+        0.9116659999999683
+      ],
+      "server": {
+        "cpuMs": 41.057,
+        "rssBeforeBytes": 83132416,
+        "rssAfterBytes": 86507520,
+        "processPeakRssBytes": 86507520,
+        "fatal": null,
+        "setup": {
+          "bridge": "minksse-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "native",
+      "repeat": 3,
+      "elapsedMs": 66.4993330000002,
+      "clientCpuMs": 39.42,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 300754.89629347017,
+      "wireMiBPerSecond": 54.751264142554746,
+      "firstEventMs": [
+        0.5897919999997612
+      ],
+      "server": {
+        "cpuMs": 54.144,
+        "rssBeforeBytes": 79347712,
+        "rssAfterBytes": 82690048,
+        "processPeakRssBytes": 82771968,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": 1250
+      }
+    },
+    {
+      "target": "hono",
+      "repeat": 3,
+      "elapsedMs": 82.22641699999986,
+      "clientCpuMs": 32.383,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 243230.83419772546,
+      "wireMiBPerSecond": 44.27923141034742,
+      "firstEventMs": [
+        0.9034169999999904
+      ],
+      "server": {
+        "cpuMs": 102.529,
+        "rssBeforeBytes": 90980352,
+        "rssAfterBytes": 108544000,
+        "processPeakRssBytes": 108544000,
+        "fatal": null,
+        "setup": {
+          "bridge": "hono-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "better-sse",
+      "repeat": 4,
+      "elapsedMs": 37.8310419999998,
+      "clientCpuMs": 25.66,
+      "events": 20000,
+      "wireBytes": 3757784,
+      "eventsPerSecond": 528666.3793188701,
+      "wireMiBPerSecond": 94.7291403552237,
+      "firstEventMs": [
+        0.7464589999999589
+      ],
+      "server": {
+        "cpuMs": 26.83,
+        "rssBeforeBytes": 84295680,
+        "rssAfterBytes": 85032960,
+        "processPeakRssBytes": 85032960,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "sveltekit-sse",
+      "repeat": 4,
+      "elapsedMs": 80.37704199999962,
+      "clientCpuMs": 33.82,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 248827.27085179492,
+      "wireMiBPerSecond": 45.29804103000874,
+      "firstEventMs": [
+        0.937666000000263
+      ],
+      "server": {
+        "cpuMs": 92.144,
+        "rssBeforeBytes": 100057088,
+        "rssAfterBytes": 100466688,
+        "processPeakRssBytes": 100466688,
+        "fatal": null,
+        "setup": {
+          "bridge": "kit",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "minksse",
+      "repeat": 4,
+      "elapsedMs": 36.21462500000007,
+      "clientCpuMs": 24.962,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 552263.0705136381,
+      "wireMiBPerSecond": 100.53735324849316,
+      "firstEventMs": [
+        0.7247919999999795
+      ],
+      "server": {
+        "cpuMs": 35.572,
+        "rssBeforeBytes": 83083264,
+        "rssAfterBytes": 86622208,
+        "processPeakRssBytes": 86622208,
+        "fatal": null,
+        "setup": {
+          "bridge": "minksse-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "native",
+      "repeat": 4,
+      "elapsedMs": 33.36479199999985,
+      "clientCpuMs": 25.834,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 599434.2779058862,
+      "wireMiBPerSecond": 109.12468887522917,
+      "firstEventMs": [
+        0.5051669999998012
+      ],
+      "server": {
+        "cpuMs": 29.69,
+        "rssBeforeBytes": 79151104,
+        "rssAfterBytes": 82853888,
+        "processPeakRssBytes": 82853888,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": 1250
+      }
+    },
+    {
+      "target": "hono",
+      "repeat": 4,
+      "elapsedMs": 80.09495800000013,
+      "clientCpuMs": 31.059,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 249703.60805982279,
+      "wireMiBPerSecond": 45.457574824956055,
+      "firstEventMs": [
+        0.8290419999998448
+      ],
+      "server": {
+        "cpuMs": 100.457,
+        "rssBeforeBytes": 90554368,
+        "rssAfterBytes": 107593728,
+        "processPeakRssBytes": 107593728,
+        "fatal": null,
+        "setup": {
+          "bridge": "hono-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "fastify",
+      "repeat": 4,
+      "elapsedMs": 45.38408299999992,
+      "clientCpuMs": 28.969,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 440683.1355389518,
+      "wireMiBPerSecond": 80.22465819980819,
+      "firstEventMs": [
+        0.5878750000001673
+      ],
+      "server": {
+        "cpuMs": 44.998,
+        "rssBeforeBytes": 97714176,
+        "rssAfterBytes": 97959936,
+        "processPeakRssBytes": 97959936,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "sveltekit-sse",
+      "repeat": 5,
+      "elapsedMs": 80.11316599999918,
+      "clientCpuMs": 33.535,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 249646.85579896072,
+      "wireMiBPerSecond": 45.4472432956495,
+      "firstEventMs": [
+        0.8896250000007058
+      ],
+      "server": {
+        "cpuMs": 93.648,
+        "rssBeforeBytes": 100057088,
+        "rssAfterBytes": 100499456,
+        "processPeakRssBytes": 100499456,
+        "fatal": null,
+        "setup": {
+          "bridge": "kit",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "minksse",
+      "repeat": 5,
+      "elapsedMs": 36.17762500000026,
+      "clientCpuMs": 25.738,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 552827.887402776,
+      "wireMiBPerSecond": 100.64017597580528,
+      "firstEventMs": [
+        0.7445420000003651
+      ],
+      "server": {
+        "cpuMs": 36.23,
+        "rssBeforeBytes": 82935808,
+        "rssAfterBytes": 86523904,
+        "processPeakRssBytes": 86523904,
+        "fatal": null,
+        "setup": {
+          "bridge": "minksse-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "native",
+      "repeat": 5,
+      "elapsedMs": 33.67975000000024,
+      "clientCpuMs": 27.266,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 593828.6359013905,
+      "wireMiBPerSecond": 108.10420345717213,
+      "firstEventMs": [
+        0.4850830000004862
+      ],
+      "server": {
+        "cpuMs": 28.606,
+        "rssBeforeBytes": 79118336,
+        "rssAfterBytes": 82821120,
+        "processPeakRssBytes": 82870272,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": 1250
+      }
+    },
+    {
+      "target": "hono",
+      "repeat": 5,
+      "elapsedMs": 81.86583400000018,
+      "clientCpuMs": 32.075,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 244302.15906674764,
+      "wireMiBPerSecond": 44.474261953853805,
+      "firstEventMs": [
+        0.8136250000006839
+      ],
+      "server": {
+        "cpuMs": 101.906,
+        "rssBeforeBytes": 90505216,
+        "rssAfterBytes": 107839488,
+        "processPeakRssBytes": 107839488,
+        "fatal": null,
+        "setup": {
+          "bridge": "hono-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "fastify",
+      "repeat": 5,
+      "elapsedMs": 47.95237499999985,
+      "clientCpuMs": 30.245,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 417080.48871406395,
+      "wireMiBPerSecond": 75.92788775085135,
+      "firstEventMs": [
+        0.6351670000003651
+      ],
+      "server": {
+        "cpuMs": 47.078,
+        "rssBeforeBytes": 98074624,
+        "rssAfterBytes": 98287616,
+        "processPeakRssBytes": 98287616,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "better-sse",
+      "repeat": 5,
+      "elapsedMs": 37.56016600000021,
+      "clientCpuMs": 25.415,
+      "events": 20000,
+      "wireBytes": 3757784,
+      "eventsPerSecond": 532479.0098105501,
+      "wireMiBPerSecond": 95.41230694780006,
+      "firstEventMs": [
+        0.7550420000006852
+      ],
+      "server": {
+        "cpuMs": 26.624,
+        "rssBeforeBytes": 84377600,
+        "rssAfterBytes": 85131264,
+        "processPeakRssBytes": 85131264,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "minksse",
+      "repeat": 6,
+      "elapsedMs": 36.983665999999175,
+      "clientCpuMs": 25.637,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 540779.2726659506,
+      "wireMiBPerSecond": 98.44677232340352,
+      "firstEventMs": [
+        0.7341670000005251
+      ],
+      "server": {
+        "cpuMs": 36.236,
+        "rssBeforeBytes": 83001344,
+        "rssAfterBytes": 86491136,
+        "processPeakRssBytes": 86491136,
+        "fatal": null,
+        "setup": {
+          "bridge": "minksse-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "native",
+      "repeat": 6,
+      "elapsedMs": 33.129124999999476,
+      "clientCpuMs": 25.114,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 603698.4073681487,
+      "wireMiBPerSecond": 109.90095713022231,
+      "firstEventMs": [
+        0.4539999999997235
+      ],
+      "server": {
+        "cpuMs": 28.133,
+        "rssBeforeBytes": 79134720,
+        "rssAfterBytes": 82821120,
+        "processPeakRssBytes": 82919424,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": 1250
+      }
+    },
+    {
+      "target": "hono",
+      "repeat": 6,
+      "elapsedMs": 82.13220799999999,
+      "clientCpuMs": 31.604,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 243509.8299074098,
+      "wireMiBPerSecond": 44.33002149883416,
+      "firstEventMs": [
+        0.8163329999997586
+      ],
+      "server": {
+        "cpuMs": 101.946,
+        "rssBeforeBytes": 90406912,
+        "rssAfterBytes": 107544576,
+        "processPeakRssBytes": 107544576,
+        "fatal": null,
+        "setup": {
+          "bridge": "hono-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "fastify",
+      "repeat": 6,
+      "elapsedMs": 47.02470899999935,
+      "clientCpuMs": 29.94,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 425308.32035558746,
+      "wireMiBPerSecond": 77.4257326374262,
+      "firstEventMs": [
+        0.6028330000008282
+      ],
+      "server": {
+        "cpuMs": 46.109,
+        "rssBeforeBytes": 97845248,
+        "rssAfterBytes": 98238464,
+        "processPeakRssBytes": 98238464,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "better-sse",
+      "repeat": 6,
+      "elapsedMs": 35.87987499999963,
+      "clientCpuMs": 24.415,
+      "events": 20000,
+      "wireBytes": 3757784,
+      "eventsPerSecond": 557415.5428356484,
+      "wireMiBPerSecond": 99.88056222053117,
+      "firstEventMs": [
+        0.7127080000000205
+      ],
+      "server": {
+        "cpuMs": 24.996,
+        "rssBeforeBytes": 84312064,
+        "rssAfterBytes": 85082112,
+        "processPeakRssBytes": 85082112,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "sveltekit-sse",
+      "repeat": 6,
+      "elapsedMs": 79.60616600000048,
+      "clientCpuMs": 33.148,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 251236.8200222063,
+      "wireMiBPerSecond": 45.73669012506765,
+      "firstEventMs": [
+        0.9055420000004233
+      ],
+      "server": {
+        "cpuMs": 92.839,
+        "rssBeforeBytes": 99827712,
+        "rssAfterBytes": 100122624,
+        "processPeakRssBytes": 100122624,
+        "fatal": null,
+        "setup": {
+          "bridge": "kit",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "native",
+      "repeat": 7,
+      "elapsedMs": 32.42870799999946,
+      "clientCpuMs": 24.667,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 616737.4907443224,
+      "wireMiBPerSecond": 112.27467176264868,
+      "firstEventMs": [
+        0.4702919999999722
+      ],
+      "server": {
+        "cpuMs": 27.594,
+        "rssBeforeBytes": 79167488,
+        "rssAfterBytes": 82853888,
+        "processPeakRssBytes": 82853888,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": 1250
+      }
+    },
+    {
+      "target": "hono",
+      "repeat": 7,
+      "elapsedMs": 82.80920800000058,
+      "clientCpuMs": 32.918,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 241519.03493630636,
+      "wireMiBPerSecond": 43.96760498405798,
+      "firstEventMs": [
+        0.8270419999998921
+      ],
+      "server": {
+        "cpuMs": 102.722,
+        "rssBeforeBytes": 90800128,
+        "rssAfterBytes": 108396544,
+        "processPeakRssBytes": 108396544,
+        "fatal": null,
+        "setup": {
+          "bridge": "hono-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "fastify",
+      "repeat": 7,
+      "elapsedMs": 47.42649999999958,
+      "clientCpuMs": 30.211,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 421705.16483401007,
+      "wireMiBPerSecond": 76.76979212859374,
+      "firstEventMs": [
+        0.612542000000758
+      ],
+      "server": {
+        "cpuMs": 46.816,
+        "rssBeforeBytes": 97632256,
+        "rssAfterBytes": 97796096,
+        "processPeakRssBytes": 97796096,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "better-sse",
+      "repeat": 7,
+      "elapsedMs": 40.27050000000054,
+      "clientCpuMs": 27.735,
+      "events": 20000,
+      "wireBytes": 3757784,
+      "eventsPerSecond": 496641.46211245784,
+      "wireMiBPerSecond": 88.99075222314835,
+      "firstEventMs": [
+        0.8877910000001066
+      ],
+      "server": {
+        "cpuMs": 29.321,
+        "rssBeforeBytes": 84656128,
+        "rssAfterBytes": 85393408,
+        "processPeakRssBytes": 85393408,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "sveltekit-sse",
+      "repeat": 7,
+      "elapsedMs": 82.20733299999938,
+      "clientCpuMs": 52.416,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 243287.2989566533,
+      "wireMiBPerSecond": 44.28951060104025,
+      "firstEventMs": [
+        0.9731249999995271
+      ],
+      "server": {
+        "cpuMs": 96.266,
+        "rssBeforeBytes": 99975168,
+        "rssAfterBytes": 100286464,
+        "processPeakRssBytes": 100286464,
+        "fatal": null,
+        "setup": {
+          "bridge": "kit",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    },
+    {
+      "target": "minksse",
+      "repeat": 7,
+      "elapsedMs": 35.85875000000033,
+      "clientCpuMs": 27.361,
+      "events": 20000,
+      "wireBytes": 3817784,
+      "eventsPerSecond": 557743.9258200529,
+      "wireMiBPerSecond": 101.53512173142359,
+      "firstEventMs": [
+        0.6901669999997466
+      ],
+      "server": {
+        "cpuMs": 36.711,
+        "rssBeforeBytes": 83050496,
+        "rssAfterBytes": 86441984,
+        "processPeakRssBytes": 86441984,
+        "fatal": null,
+        "setup": {
+          "bridge": "minksse-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      }
+    }
+  ],
+  "summary": {
+    "native": {
+      "eventsPerSecond": {
+        "count": 7,
+        "mean": 567939.4896907908,
+        "median": 603698.4073681487,
+        "min": 300754.89629347017,
+        "max": 646481.1963832737,
+        "ci95": [
+          457818.27445181634,
+          678060.7049297652
+        ]
+      },
+      "elapsedMs": {
+        "count": 7,
+        "mean": 37.51110114285702,
+        "median": 33.129124999999476,
+        "min": 30.93670800000001,
+        "max": 66.4993330000002,
+        "ci95": [
+          25.659874580434074,
+          49.36232770527997
+        ]
+      },
+      "firstEventMedianMs": {
+        "count": 7,
+        "mean": 0.5573454285713808,
+        "median": 0.5051669999998012,
+        "min": 0.4539999999997235,
+        "max": 0.8427499999999952,
+        "ci95": [
+          0.4328465818234021,
+          0.6818442753193595
+        ]
+      },
+      "firstEventP95Ms": {
+        "count": 7,
+        "mean": 0.5573454285713808,
+        "median": 0.5051669999998012,
+        "min": 0.4539999999997235,
+        "max": 0.8427499999999952,
+        "ci95": [
+          0.4328465818234021,
+          0.6818442753193595
+        ]
+      },
+      "serverCpuMs": {
+        "count": 7,
+        "mean": 31.75614285714286,
+        "median": 28.133,
+        "min": 26.198,
+        "max": 54.144,
+        "ci95": [
+          22.57382225901091,
+          40.93846345527481
+        ]
+      },
+      "clientCpuMs": {
+        "count": 7,
+        "mean": 28.906000000000002,
+        "median": 25.834,
+        "min": 24.637,
+        "max": 39.42,
+        "ci95": [
+          23.36356712156207,
+          34.448432878437934
+        ]
+      },
+      "serverRssAfterMiB": {
+        "count": 7,
+        "mean": 78.984375,
+        "median": 78.984375,
+        "min": 78.859375,
+        "max": 79.109375,
+        "ci95": [
+          78.91163871024143,
+          79.05711128975857
+        ]
+      },
+      "serverProcessPeakRssMiB": {
+        "count": 7,
+        "mean": 79.02901785714286,
+        "median": 79.015625,
+        "min": 78.921875,
+        "max": 79.203125,
+        "ci95": [
+          78.94213857657527,
+          79.11589713771045
+        ]
+      }
+    },
+    "hono": {
+      "eventsPerSecond": {
+        "count": 7,
+        "mean": 244040.7066016816,
+        "median": 243509.8299074098,
+        "min": 240982.1236086958,
+        "max": 249703.60805982279,
+        "ci95": [
+          241376.6480819656,
+          246704.7651213976
+        ]
+      },
+      "elapsedMs": {
+        "count": 7,
+        "mean": 81.96322014285725,
+        "median": 82.13220799999999,
+        "min": 80.09495800000013,
+        "max": 82.99370799999997,
+        "ci95": [
+          81.07828155133551,
+          82.848158734379
+        ]
+      },
+      "firstEventMedianMs": {
+        "count": 7,
+        "mean": 0.8811430000000412,
+        "median": 0.8290419999998448,
+        "min": 0.8136250000006839,
+        "max": 1.1036250000000223,
+        "ci95": [
+          0.7852988817665888,
+          0.9769871182334936
+        ]
+      },
+      "firstEventP95Ms": {
+        "count": 7,
+        "mean": 0.8811430000000412,
+        "median": 0.8290419999998448,
+        "min": 0.8136250000006839,
+        "max": 1.1036250000000223,
+        "ci95": [
+          0.7852988817665888,
+          0.9769871182334936
+        ]
+      },
+      "serverCpuMs": {
+        "count": 7,
+        "mean": 102.41885714285715,
+        "median": 102.529,
+        "min": 100.457,
+        "max": 104.75,
+        "ci95": [
+          101.22992754099644,
+          103.60778674471786
+        ]
+      },
+      "clientCpuMs": {
+        "count": 7,
+        "mean": 33.235285714285716,
+        "median": 32.172,
+        "min": 31.059,
+        "max": 40.436,
+        "ci95": [
+          30.249021798884723,
+          36.221549629686706
+        ]
+      },
+      "serverRssAfterMiB": {
+        "count": 7,
+        "mean": 103.03348214285714,
+        "median": 103.03125,
+        "min": 102.5625,
+        "max": 103.515625,
+        "ci95": [
+          102.68410990840827,
+          103.382854377306
+        ]
+      },
+      "serverProcessPeakRssMiB": {
+        "count": 7,
+        "mean": 103.03348214285714,
+        "median": 103.03125,
+        "min": 102.5625,
+        "max": 103.515625,
+        "ci95": [
+          102.68410990840827,
+          103.382854377306
+        ]
+      }
+    },
+    "fastify": {
+      "eventsPerSecond": {
+        "count": 7,
+        "mean": 426034.23546759784,
+        "median": 425308.32035558746,
+        "min": 417080.48871406395,
+        "max": 440683.1355389518,
+        "ci95": [
+          418119.3928176645,
+          433949.0781175312
+        ]
+      },
+      "elapsedMs": {
+        "count": 7,
+        "mean": 46.96063685714267,
+        "median": 47.02470899999935,
+        "min": 45.38408299999992,
+        "max": 47.95237499999985,
+        "ci95": [
+          46.09820110856558,
+          47.82307260571975
+        ]
+      },
+      "firstEventMedianMs": {
+        "count": 7,
+        "mean": 0.6439344285717132,
+        "median": 0.6350830000001224,
+        "min": 0.5878750000001673,
+        "max": 0.7610409999999774,
+        "ci95": [
+          0.5898317125480176,
+          0.6980371445954089
+        ]
+      },
+      "firstEventP95Ms": {
+        "count": 7,
+        "mean": 0.6439344285717132,
+        "median": 0.6350830000001224,
+        "min": 0.5878750000001673,
+        "max": 0.7610409999999774,
+        "ci95": [
+          0.5898317125480176,
+          0.6980371445954089
+        ]
+      },
+      "serverCpuMs": {
+        "count": 7,
+        "mean": 46.13714285714286,
+        "median": 46.109,
+        "min": 44.998,
+        "max": 47.078,
+        "ci95": [
+          45.33720187210337,
+          46.93708384218235
+        ]
+      },
+      "clientCpuMs": {
+        "count": 7,
+        "mean": 30.45357142857143,
+        "median": 30.211,
+        "min": 28.969,
+        "max": 31.968,
+        "ci95": [
+          29.499121049568572,
+          31.408021807574286
+        ]
+      },
+      "serverRssAfterMiB": {
+        "count": 7,
+        "mean": 93.66741071428571,
+        "median": 93.734375,
+        "min": 93.265625,
+        "max": 93.90625,
+        "ci95": [
+          93.44861018362563,
+          93.88621124494578
+        ]
+      },
+      "serverProcessPeakRssMiB": {
+        "count": 7,
+        "mean": 93.66741071428571,
+        "median": 93.734375,
+        "min": 93.265625,
+        "max": 93.90625,
+        "ci95": [
+          93.44861018362563,
+          93.88621124494578
+        ]
+      }
+    },
+    "better-sse": {
+      "eventsPerSecond": {
+        "count": 7,
+        "mean": 533861.9505062321,
+        "median": 532479.0098105501,
+        "min": 496641.46211245784,
+        "max": 557415.5428356484,
+        "ci95": [
+          516097.40878998407,
+          551626.4922224801
+        ]
+      },
+      "elapsedMs": {
+        "count": 7,
+        "mean": 37.50585714285715,
+        "median": 37.56016600000021,
+        "min": 35.87987499999963,
+        "max": 40.27050000000054,
+        "ci95": [
+          36.21558624224359,
+          38.796128043470716
+        ]
+      },
+      "firstEventMedianMs": {
+        "count": 7,
+        "mean": 0.7860178571430002,
+        "median": 0.7550420000006852,
+        "min": 0.7127080000000205,
+        "max": 0.8897499999999354,
+        "ci95": [
+          0.7187602424917887,
+          0.8532754717942117
+        ]
+      },
+      "firstEventP95Ms": {
+        "count": 7,
+        "mean": 0.7860178571430002,
+        "median": 0.7550420000006852,
+        "min": 0.7127080000000205,
+        "max": 0.8897499999999354,
+        "ci95": [
+          0.7187602424917887,
+          0.8532754717942117
+        ]
+      },
+      "serverCpuMs": {
+        "count": 7,
+        "mean": 26.66557142857143,
+        "median": 26.624,
+        "min": 24.996,
+        "max": 29.321,
+        "ci95": [
+          25.441315322801426,
+          27.889827534341432
+        ]
+      },
+      "clientCpuMs": {
+        "count": 7,
+        "mean": 25.693714285714286,
+        "median": 25.66,
+        "min": 24.415,
+        "max": 27.735,
+        "ci95": [
+          24.698447327459906,
+          26.688981243968666
+        ]
+      },
+      "serverRssAfterMiB": {
+        "count": 7,
+        "mean": 81.203125,
+        "median": 81.15625,
+        "min": 81.09375,
+        "max": 81.4375,
+        "ci95": [
+          81.09275186650727,
+          81.31349813349273
+        ]
+      },
+      "serverProcessPeakRssMiB": {
+        "count": 7,
+        "mean": 81.203125,
+        "median": 81.15625,
+        "min": 81.09375,
+        "max": 81.4375,
+        "ci95": [
+          81.09275186650727,
+          81.31349813349273
+        ]
+      }
+    },
+    "sveltekit-sse": {
+      "eventsPerSecond": {
+        "count": 7,
+        "mean": 248596.87209407077,
+        "median": 249092.36967798643,
+        "min": 243287.2989566533,
+        "max": 251714.94018032195,
+        "ci95": [
+          245894.2853563633,
+          251299.45883177823
+        ]
+      },
+      "elapsedMs": {
+        "count": 7,
+        "mean": 80.46114857142834,
+        "median": 80.29149999999981,
+        "min": 79.45495800000003,
+        "max": 82.20733299999938,
+        "ci95": [
+          79.57861022176684,
+          81.34368692108984
+        ]
+      },
+      "firstEventMedianMs": {
+        "count": 7,
+        "mean": 0.9827975714287212,
+        "median": 0.937666000000263,
+        "min": 0.8896250000007058,
+        "max": 1.1581670000000486,
+        "ci95": [
+          0.8881981723084066,
+          1.0773969705490358
+        ]
+      },
+      "firstEventP95Ms": {
+        "count": 7,
+        "mean": 0.9827975714287212,
+        "median": 0.937666000000263,
+        "min": 0.8896250000007058,
+        "max": 1.1581670000000486,
+        "ci95": [
+          0.8881981723084066,
+          1.0773969705490358
+        ]
+      },
+      "serverCpuMs": {
+        "count": 7,
+        "mean": 93.53999999999998,
+        "median": 93.648,
+        "min": 92.144,
+        "max": 96.266,
+        "ci95": [
+          92.2607000017545,
+          94.81929999824546
+        ]
+      },
+      "clientCpuMs": {
+        "count": 7,
+        "mean": 38.425000000000004,
+        "median": 33.82,
+        "min": 33.148,
+        "max": 52.416,
+        "ci95": [
+          30.75216711479998,
+          46.09783288520003
+        ]
+      },
+      "serverRssAfterMiB": {
+        "count": 7,
+        "mean": 95.46875,
+        "median": 95.640625,
+        "min": 94.671875,
+        "max": 95.890625,
+        "ci95": [
+          95.02458506381453,
+          95.91291493618547
+        ]
+      },
+      "serverProcessPeakRssMiB": {
+        "count": 7,
+        "mean": 95.46875,
+        "median": 95.640625,
+        "min": 94.671875,
+        "max": 95.890625,
+        "ci95": [
+          95.02458506381453,
+          95.91291493618547
+        ]
+      }
+    },
+    "minksse": {
+      "eventsPerSecond": {
+        "count": 7,
+        "mean": 538522.4422436447,
+        "median": 552263.0705136381,
+        "min": 462064.9525627949,
+        "max": 557743.9258200529,
+        "ci95": [
+          506958.1600787356,
+          570086.7244085538
+        ]
+      },
+      "elapsedMs": {
+        "count": 7,
+        "mean": 37.283606999999975,
+        "median": 36.21462500000007,
+        "min": 35.85875000000033,
+        "max": 43.283957999999984,
+        "ci95": [
+          34.81492158472929,
+          39.75229241527066
+        ]
+      },
+      "firstEventMedianMs": {
+        "count": 7,
+        "mean": 0.7479227142857781,
+        "median": 0.7341670000005251,
+        "min": 0.6901669999997466,
+        "max": 0.9116659999999683,
+        "ci95": [
+          0.6782532058186805,
+          0.8175922227528756
+        ]
+      },
+      "firstEventP95Ms": {
+        "count": 7,
+        "mean": 0.7479227142857781,
+        "median": 0.7341670000005251,
+        "min": 0.6901669999997466,
+        "max": 0.9116659999999683,
+        "ci95": [
+          0.6782532058186805,
+          0.8175922227528756
+        ]
+      },
+      "serverCpuMs": {
+        "count": 7,
+        "mean": 37.06942857142857,
+        "median": 36.569,
+        "min": 35.572,
+        "max": 41.057,
+        "ci95": [
+          35.38409648364171,
+          38.75476065921542
+        ]
+      },
+      "clientCpuMs": {
+        "count": 7,
+        "mean": 26.43614285714286,
+        "median": 25.637,
+        "min": 24.962,
+        "max": 30.25,
+        "ci95": [
+          24.736384265913212,
+          28.135901448372504
+        ]
+      },
+      "serverRssAfterMiB": {
+        "count": 7,
+        "mean": 82.51116071428571,
+        "median": 82.5,
+        "min": 82.421875,
+        "max": 82.609375,
+        "ci95": [
+          82.44199866290526,
+          82.58032276566615
+        ]
+      },
+      "serverProcessPeakRssMiB": {
+        "count": 7,
+        "mean": 82.51116071428571,
+        "median": 82.5,
+        "min": 82.421875,
+        "max": 82.609375,
+        "ci95": [
+          82.44199866290526,
+          82.58032276566615
+        ]
+      }
+    }
+  }
+}

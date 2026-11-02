@@ -1,0 +1,567 @@
+{
+  "method": "V8 sampled self time, startup andwarmupincluded; diagnostic only, neverranking.",
+  "profiles": {
+    "native": {
+      "file": "native-optimized-1793578627163.cpuprofile",
+      "totalSampledMs": 1626.625,
+      "top": [
+        {
+          "function": "writev",
+          "url": "",
+          "selfMs": 552.081
+        },
+        {
+          "function": "writevGeneric",
+          "url": "node:internal/stream_base_commons",
+          "selfMs": 294.87799999999993
+        },
+        {
+          "function": "(idle)",
+          "url": "",
+          "selfMs": 191.71
+        },
+        {
+          "function": "handle",
+          "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+          "selfMs": 153.507
+        },
+        {
+          "function": "(anonymous)",
+          "url": "",
+          "selfMs": 110.66199999999999
+        },
+        {
+          "function": "runMicrotasks",
+          "url": "",
+          "selfMs": 60.037
+        },
+        {
+          "function": "(program)",
+          "url": "",
+          "selfMs": 53.752
+        },
+        {
+          "function": "setImmediate",
+          "url": "node:timers/promises",
+          "selfMs": 18.209
+        },
+        {
+          "function": "nextTick",
+          "url": "node:internal/process/task_queues",
+          "selfMs": 17.250999999999998
+        },
+        {
+          "function": "writeOrBuffer",
+          "url": "node:internal/streams/writable",
+          "selfMs": 15.582
+        },
+        {
+          "function": "processImmediate",
+          "url": "node:internal/timers",
+          "selfMs": 13.289
+        },
+        {
+          "function": "write_",
+          "url": "node:_http_outgoing",
+          "selfMs": 12.584999999999999
+        },
+        {
+          "function": "clearBuffer",
+          "url": "node:internal/streams/writable",
+          "selfMs": 12.292
+        },
+        {
+          "function": "onwrite",
+          "url": "node:internal/streams/writable",
+          "selfMs": 12.126999999999999
+        },
+        {
+          "function": "(garbage collector)",
+          "url": "",
+          "selfMs": 11.166
+        },
+        {
+          "function": "_send",
+          "url": "node:_http_outgoing",
+          "selfMs": 9.165999999999999
+        },
+        {
+          "function": "serializeData",
+          "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/core.mjs",
+          "selfMs": 8.791
+        },
+        {
+          "function": "createWriteWrap",
+          "url": "node:internal/stream_base_commons",
+          "selfMs": 7.875
+        },
+        {
+          "function": "(anonymous)",
+          "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+          "selfMs": 7.5
+        },
+        {
+          "function": "processTicksAndRejections",
+          "url": "node:internal/process/task_queues",
+          "selfMs": 6.915
+        },
+        {
+          "function": "compileForInternalLoader",
+          "url": "node:internal/bootstrap/realm",
+          "selfMs": 5.042
+        },
+        {
+          "function": "afterWriteTick",
+          "url": "node:internal/streams/writable",
+          "selfMs": 4.666
+        },
+        {
+          "function": "SafeMap",
+          "url": "node:internal/per_context/primordials",
+          "selfMs": 4.167
+        },
+        {
+          "function": "doWrite",
+          "url": "node:internal/streams/writable",
+          "selfMs": 3.333
+        },
+        {
+          "function": "nativeFrame",
+          "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+          "selfMs": 3.291
+        },
+        {
+          "function": "processPromiseRejections",
+          "url": "node:internal/process/promises",
+          "selfMs": 3.25
+        },
+        {
+          "function": "__require",
+          "url": "node:internal/deps/undici/undici",
+          "selfMs": 2.5
+        },
+        {
+          "function": "Socket._writeGeneric",
+          "url": "node:net",
+          "selfMs": 2.3339999999999996
+        },
+        {
+          "function": "byteLength",
+          "url": "node:buffer",
+          "selfMs": 2.292
+        },
+        {
+          "function": "write",
+          "url": "node:_http_outgoing",
+          "selfMs": 2.125
+        },
+        {
+          "function": "popAsyncContext",
+          "url": "node:internal/async_hooks",
+          "selfMs": 2.084
+        },
+        {
+          "function": "(anonymous)",
+          "url": "node:internal/streams/readable",
+          "selfMs": 1.375
+        },
+        {
+          "function": "(anonymous)",
+          "url": "node:internal/dns/utils",
+          "selfMs": 1.292
+        },
+        {
+          "function": "parserOnIncoming",
+          "url": "node:_http_server",
+          "selfMs": 1.292
+        },
+        {
+          "function": "resetBuffer",
+          "url": "node:internal/streams/writable",
+          "selfMs": 1.291
+        },
+        {
+          "function": "#cachedDefaultResolve",
+          "url": "node:internal/modules/esm/loader",
+          "selfMs": 1.25
+        },
+        {
+          "function": "init",
+          "url": "node:internal/util/debuglog",
+          "selfMs": 1.25
+        },
+        {
+          "function": "enumToMap",
+          "url": "node:internal/deps/undici/undici",
+          "selfMs": 1.25
+        },
+        {
+          "function": "(anonymous)",
+          "url": "node:internal/http2/core",
+          "selfMs": 1.25
+        },
+        {
+          "function": "(anonymous)",
+          "url": "node:internal/crypto/util",
+          "selfMs": 1.25
+        },
+        {
+          "function": "isIPv6",
+          "url": "node:internal/net",
+          "selfMs": 1.25
+        },
+        {
+          "function": "Duplex",
+          "url": "node:internal/streams/duplex",
+          "selfMs": 1.25
+        },
+        {
+          "function": "(anonymous)",
+          "url": "node:internal/validators",
+          "selfMs": 1.25
+        },
+        {
+          "function": "StringDecoder",
+          "url": "node:string_decoder",
+          "selfMs": 1.25
+        },
+        {
+          "function": "_forkChild",
+          "url": "node:child_process",
+          "selfMs": 1.208
+        },
+        {
+          "function": "nop",
+          "url": "node:_http_outgoing",
+          "selfMs": 1.083
+        },
+        {
+          "function": "connectionCorkNT",
+          "url": "node:_http_outgoing",
+          "selfMs": 1.042
+        },
+        {
+          "function": "runNextTicks",
+          "url": "node:internal/process/task_queues",
+          "selfMs": 1
+        },
+        {
+          "function": "get",
+          "url": "node:internal/streams/writable",
+          "selfMs": 0.5830000000000001
+        },
+        {
+          "function": "callback",
+          "url": "node:internal/streams/writable",
+          "selfMs": 0.292
+        },
+        {
+          "function": "insertGuarded",
+          "url": "node:internal/timers",
+          "selfMs": 0.292
+        },
+        {
+          "function": "get",
+          "url": "node:internal/streams/duplex",
+          "selfMs": 0.083
+        },
+        {
+          "function": "Immediate",
+          "url": "node:internal/timers",
+          "selfMs": 0.042
+        },
+        {
+          "function": "_unrefTimer",
+          "url": "node:net",
+          "selfMs": 0.041
+        },
+        {
+          "function": "(root)",
+          "url": "",
+          "selfMs": 0
+        }
+      ]
+    },
+    "minksse": {
+      "file": "minksse-optimized-1793578628819.cpuprofile",
+      "totalSampledMs": 2065.167,
+      "top": [
+        {
+          "function": "writev",
+          "url": "",
+          "selfMs": 549.7499999999999
+        },
+        {
+          "function": "(idle)",
+          "url": "",
+          "selfMs": 271.836
+        },
+        {
+          "function": "encode",
+          "url": "node:internal/encoding",
+          "selfMs": 256.669
+        },
+        {
+          "function": "emitValue",
+          "url": "file:///Users/ogie/WebProjects/minksse/dist/server.js",
+          "selfMs": 146.123
+        },
+        {
+          "function": "encodeUtf8String",
+          "url": "",
+          "selfMs": 140.165
+        },
+        {
+          "function": "emitBatch",
+          "url": "file:///Users/ogie/WebProjects/minksse/dist/server.js",
+          "selfMs": 103.458
+        },
+        {
+          "function": "(anonymous)",
+          "url": "",
+          "selfMs": 102.506
+        },
+        {
+          "function": "(program)",
+          "url": "",
+          "selfMs": 86.952
+        },
+        {
+          "function": "(anonymous)",
+          "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+          "selfMs": 34.084
+        },
+        {
+          "function": "queueFrame",
+          "url": "file:///Users/ogie/WebProjects/minksse/dist/server.js",
+          "selfMs": 31.789
+        },
+        {
+          "function": "writevGeneric",
+          "url": "node:internal/stream_base_commons",
+          "selfMs": 31.290999999999997
+        },
+        {
+          "function": "runMicrotasks",
+          "url": "",
+          "selfMs": 21.795
+        },
+        {
+          "function": "(garbage collector)",
+          "url": "",
+          "selfMs": 19.542
+        },
+        {
+          "function": "writeSseResponse",
+          "url": "file:///Users/ogie/WebProjects/minksse/dist/node.js",
+          "selfMs": 17.998
+        },
+        {
+          "function": "processImmediate",
+          "url": "node:internal/timers",
+          "selfMs": 17.794
+        },
+        {
+          "function": "createWriteWrap",
+          "url": "node:internal/stream_base_commons",
+          "selfMs": 16
+        },
+        {
+          "function": "readableStreamFulfillReadRequest",
+          "url": "node:internal/webstreams/readablestream",
+          "selfMs": 15.704
+        },
+        {
+          "function": "nextTick",
+          "url": "node:internal/process/task_queues",
+          "selfMs": 15.666
+        },
+        {
+          "function": "_send",
+          "url": "node:_http_outgoing",
+          "selfMs": 11.334999999999999
+        },
+        {
+          "function": "serializeData",
+          "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/core.mjs",
+          "selfMs": 11.334
+        },
+        {
+          "function": "processTicksAndRejections",
+          "url": "node:internal/process/task_queues",
+          "selfMs": 10.707
+        },
+        {
+          "function": "setImmediate",
+          "url": "node:timers/promises",
+          "selfMs": 10.001
+        },
+        {
+          "function": "onwrite",
+          "url": "node:internal/streams/writable",
+          "selfMs": 8.915000000000001
+        },
+        {
+          "function": "writeOrBuffer",
+          "url": "node:internal/streams/writable",
+          "selfMs": 7.917
+        },
+        {
+          "function": "write_",
+          "url": "node:_http_outgoing",
+          "selfMs": 7.834999999999999
+        },
+        {
+          "function": "compileForInternalLoader",
+          "url": "node:internal/bootstrap/realm",
+          "selfMs": 7.584
+        },
+        {
+          "function": "clearBuffer",
+          "url": "node:internal/streams/writable",
+          "selfMs": 6.7509999999999994
+        },
+        {
+          "function": "RegExp: [\\r\\n]",
+          "url": "",
+          "selfMs": 6.666
+        },
+        {
+          "function": "FastBuffer",
+          "url": "node:internal/buffer",
+          "selfMs": 6.622999999999999
+        },
+        {
+          "function": "Socket._writeGeneric",
+          "url": "node:net",
+          "selfMs": 5.502000000000001
+        },
+        {
+          "function": "readableStreamDefaultControllerCallPullIfNeeded",
+          "url": "node:internal/webstreams/readablestream",
+          "selfMs": 5.2490000000000006
+        },
+        {
+          "function": "runNextTicks",
+          "url": "node:internal/process/task_queues",
+          "selfMs": 4.667
+        },
+        {
+          "function": "DefaultReadRequest",
+          "url": "node:internal/webstreams/readablestream",
+          "selfMs": 4.625
+        },
+        {
+          "function": "SafeMap",
+          "url": "node:internal/per_context/primordials",
+          "selfMs": 4.501
+        },
+        {
+          "function": "__require",
+          "url": "node:internal/deps/undici/undici",
+          "selfMs": 3.75
+        },
+        {
+          "function": "afterWriteTick",
+          "url": "node:internal/streams/writable",
+          "selfMs": 3.416
+        },
+        {
+          "function": "(anonymous)",
+          "url": "node:internal/webstreams/readablestream",
+          "selfMs": 3.375
+        },
+        {
+          "function": "readableStreamAddReadRequest",
+          "url": "node:internal/webstreams/readablestream",
+          "selfMs": 3.2089999999999996
+        },
+        {
+          "function": "get",
+          "url": "node:internal/streams/writable",
+          "selfMs": 2.666
+        },
+        {
+          "function": "readableStreamGetNumReadRequests",
+          "url": "node:internal/webstreams/readablestream",
+          "selfMs": 2.541
+        },
+        {
+          "function": "connectionCorkNT",
+          "url": "node:_http_outgoing",
+          "selfMs": 2.375
+        },
+        {
+          "function": "processPromiseRejections",
+          "url": "node:internal/process/promises",
+          "selfMs": 2.375
+        },
+        {
+          "function": "readableStreamDefaultControllerGetDesiredSize",
+          "url": "node:internal/webstreams/readablestream",
+          "selfMs": 2.166
+        },
+        {
+          "function": "readableStreamDefaultReaderRead",
+          "url": "node:internal/webstreams/readablestream",
+          "selfMs": 1.834
+        },
+        {
+          "function": "read",
+          "url": "node:internal/webstreams/readablestream",
+          "selfMs": 1.501
+        },
+        {
+          "function": "(anonymous)",
+          "url": "node:internal/event_target",
+          "selfMs": 1.292
+        },
+        {
+          "function": "getOrCreateModuleJob",
+          "url": "node:internal/modules/esm/loader",
+          "selfMs": 1.291
+        },
+        {
+          "function": "resetBuffer",
+          "url": "node:internal/streams/writable",
+          "selfMs": 1.291
+        },
+        {
+          "function": "customPromiseExecFunction",
+          "url": "node:child_process",
+          "selfMs": 1.25
+        },
+        {
+          "function": "getModuleRequests",
+          "url": "",
+          "selfMs": 1.25
+        },
+        {
+          "function": "(anonymous)",
+          "url": "node:internal/util/colors",
+          "selfMs": 1.25
+        },
+        {
+          "function": "lib/llhttp/constants.js",
+          "url": "node:internal/deps/undici/undici",
+          "selfMs": 1.25
+        },
+        {
+          "function": "internalBinding",
+          "url": "node:internal/bootstrap/realm",
+          "selfMs": 1.25
+        },
+        {
+          "function": "compileSourceTextModule",
+          "url": "node:internal/modules/esm/utils",
+          "selfMs": 1.25
+        },
+        {
+          "function": "(anonymous)",
+          "url": "node:internal/dns/utils",
+          "selfMs": 1.25
+        }
+      ]
+    }
+  }
+}

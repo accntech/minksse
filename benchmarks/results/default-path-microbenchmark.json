@@ -1,0 +1,21 @@
+{
+  "method": "Existing scripts/benchmark.mjs baseline/current alternating order, seven samples after three warmups; lower ms is better. Default coalescing disabled, no HTTP adapter involved.",
+  "runtime": "Node v24.12.0",
+  "baselineServerSha256": "b84a684fbc730023d707f091539a17180f062dc143fbd734e039fa7ce352d16a",
+  "currentServerSha256": "7d28be63fe45d280c4835a72ab17bb3a7f0b9324500fac677f7b139c5875e096",
+  "baselineMatchesPriorReport": true,
+  "tasks": {
+    "parser batched": {
+      "baselineMs": 32.48,
+      "currentMs": 32.4
+    },
+    "parser fragmented": {
+      "baselineMs": 7.27,
+      "currentMs": 7.04
+    },
+    "producer drained": {
+      "baselineMs": 5.99,
+      "currentMs": 5.95
+    }
+  }
+}

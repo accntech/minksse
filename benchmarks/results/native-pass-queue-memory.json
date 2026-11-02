@@ -1,0 +1,40 @@
+{
+  "node": "v24.12.0",
+  "method": "Three fresh --expose-gc processes per variant;7000 tinyframes,coalesce8192;four GC turns; heapUsed delta vs warm Response baseline. This is not total process RSS or a universal heap bound.",
+  "samples": [
+    {
+      "variant": "before",
+      "repeat": 1,
+      "retainedBytes": 1471152
+    },
+    {
+      "variant": "before",
+      "repeat": 2,
+      "retainedBytes": 1471152
+    },
+    {
+      "variant": "before",
+      "repeat": 3,
+      "retainedBytes": 1471152
+    },
+    {
+      "variant": "after",
+      "repeat": 1,
+      "retainedBytes": 379080
+    },
+    {
+      "variant": "after",
+      "repeat": 2,
+      "retainedBytes": 379080
+    },
+    {
+      "variant": "after",
+      "repeat": 3,
+      "retainedBytes": 379048
+    }
+  ],
+  "medianBytes": {
+    "before": 1471152,
+    "after": 379080
+  }
+}

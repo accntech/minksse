@@ -1,0 +1,541 @@
+{
+  "createdAt": "2026-11-01T14:37:59.701Z",
+  "node": "v24.12.0",
+  "method": "Alternating native write/batch order; framing and joining inside timing, shared batch schedule",
+  "samples": [
+    {
+      "repeat": 0,
+      "options": {
+        "events": 10000,
+        "clients": 1,
+        "bytes": 128,
+        "batch": 16,
+        "interval": 0,
+        "warmup": 1,
+        "timeout": 30000,
+        "setup": "optimized",
+        "native": "write"
+      },
+      "elapsedMs": 22.46575,
+      "events": 10000,
+      "wireBytes": 1897784,
+      "eventsPerSecond": 445122.01907347847,
+      "wireMiBPerSecond": 80.56120356038497,
+      "firstEventMs": [
+        0.9283750000000026
+      ],
+      "server": {
+        "cpuMs": 22.546,
+        "rssBeforeBytes": 73875456,
+        "rssAfterBytes": 74924032,
+        "processPeakRssBytes": 74924032,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "write"
+        },
+        "nativeWrites": 10000
+      }
+    },
+    {
+      "repeat": 0,
+      "options": {
+        "events": 10000,
+        "clients": 1,
+        "bytes": 128,
+        "batch": 16,
+        "interval": 0,
+        "warmup": 1,
+        "timeout": 30000,
+        "setup": "optimized",
+        "native": "batch"
+      },
+      "elapsedMs": 16.104874999999993,
+      "events": 10000,
+      "wireBytes": 1897784,
+      "eventsPerSecond": 620929.9979043616,
+      "wireMiBPerSecond": 112.38012458257016,
+      "firstEventMs": [
+        0.6093330000000208
+      ],
+      "server": {
+        "cpuMs": 12.152,
+        "rssBeforeBytes": 69074944,
+        "rssAfterBytes": 69419008,
+        "processPeakRssBytes": 69419008,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch"
+        },
+        "nativeWrites": 625
+      }
+    },
+    {
+      "repeat": 1,
+      "options": {
+        "events": 10000,
+        "clients": 1,
+        "bytes": 128,
+        "batch": 16,
+        "interval": 0,
+        "warmup": 1,
+        "timeout": 30000,
+        "setup": "optimized",
+        "native": "batch"
+      },
+      "elapsedMs": 16.584041999999982,
+      "events": 10000,
+      "wireBytes": 1897784,
+      "eventsPerSecond": 602989.3074318076,
+      "wireMiBPerSecond": 109.13309667731912,
+      "firstEventMs": [
+        0.5902079999999899
+      ],
+      "server": {
+        "cpuMs": 12.646,
+        "rssBeforeBytes": 69287936,
+        "rssAfterBytes": 69812224,
+        "processPeakRssBytes": 69812224,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch"
+        },
+        "nativeWrites": 625
+      }
+    },
+    {
+      "repeat": 1,
+      "options": {
+        "events": 10000,
+        "clients": 1,
+        "bytes": 128,
+        "batch": 16,
+        "interval": 0,
+        "warmup": 1,
+        "timeout": 30000,
+        "setup": "optimized",
+        "native": "write"
+      },
+      "elapsedMs": 22.42833300000001,
+      "events": 10000,
+      "wireBytes": 1897784,
+      "eventsPerSecond": 445864.6124078859,
+      "wireMiBPerSecond": 80.6956031412017,
+      "firstEventMs": [
+        0.5962079999999901
+      ],
+      "server": {
+        "cpuMs": 22.621,
+        "rssBeforeBytes": 74088448,
+        "rssAfterBytes": 74989568,
+        "processPeakRssBytes": 74989568,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "write"
+        },
+        "nativeWrites": 10000
+      }
+    },
+    {
+      "repeat": 2,
+      "options": {
+        "events": 10000,
+        "clients": 1,
+        "bytes": 128,
+        "batch": 16,
+        "interval": 0,
+        "warmup": 1,
+        "timeout": 30000,
+        "setup": "optimized",
+        "native": "write"
+      },
+      "elapsedMs": 22.691832999999974,
+      "events": 10000,
+      "wireBytes": 1897784,
+      "eventsPerSecond": 440687.184680057,
+      "wireMiBPerSecond": 79.75855713757107,
+      "firstEventMs": [
+        0.7560830000000465
+      ],
+      "server": {
+        "cpuMs": 22.945,
+        "rssBeforeBytes": 74203136,
+        "rssAfterBytes": 74874880,
+        "processPeakRssBytes": 74874880,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "write"
+        },
+        "nativeWrites": 10000
+      }
+    },
+    {
+      "repeat": 2,
+      "options": {
+        "events": 10000,
+        "clients": 1,
+        "bytes": 128,
+        "batch": 16,
+        "interval": 0,
+        "warmup": 1,
+        "timeout": 30000,
+        "setup": "optimized",
+        "native": "batch"
+      },
+      "elapsedMs": 17.371207999999967,
+      "events": 10000,
+      "wireBytes": 1897784,
+      "eventsPerSecond": 575665.2041700276,
+      "wireMiBPerSecond": 104.1877950506794,
+      "firstEventMs": [
+        0.4734160000000429
+      ],
+      "server": {
+        "cpuMs": 13.319,
+        "rssBeforeBytes": 69255168,
+        "rssAfterBytes": 69632000,
+        "processPeakRssBytes": 69632000,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch"
+        },
+        "nativeWrites": 625
+      }
+    },
+    {
+      "repeat": 0,
+      "options": {
+        "events": 10000,
+        "clients": 16,
+        "bytes": 128,
+        "batch": 16,
+        "interval": 0,
+        "warmup": 1,
+        "timeout": 30000,
+        "setup": "optimized",
+        "native": "write"
+      },
+      "elapsedMs": 166.71729199999993,
+      "events": 160000,
+      "wireBytes": 30364544,
+      "eventsPerSecond": 959708.4866277704,
+      "wireMiBPerSecond": 173.69455438484158,
+      "firstEventMs": [
+        0.7489170000000058,
+        0.6942500000000109,
+        0.6997079999999869,
+        0.7029589999999644,
+        0.8601250000000391,
+        0.9447499999999991,
+        0.9699170000000095,
+        0.9961660000000165,
+        1.0080000000000382,
+        1.022375000000011,
+        1.0408750000000282,
+        1.1553329999999278,
+        1.1820410000000265,
+        1.2167500000000473,
+        1.2282500000000027,
+        1.2433750000000146
+      ],
+      "server": {
+        "cpuMs": 185.952,
+        "rssBeforeBytes": 74924032,
+        "rssAfterBytes": 83247104,
+        "processPeakRssBytes": 83247104,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "write"
+        },
+        "nativeWrites": 160000
+      }
+    },
+    {
+      "repeat": 0,
+      "options": {
+        "events": 10000,
+        "clients": 16,
+        "bytes": 128,
+        "batch": 16,
+        "interval": 0,
+        "warmup": 1,
+        "timeout": 30000,
+        "setup": "optimized",
+        "native": "batch"
+      },
+      "elapsedMs": 101.21045900000013,
+      "events": 160000,
+      "wireBytes": 30364544,
+      "eventsPerSecond": 1580864.2859726562,
+      "wireMiBPerSecond": 286.1155460443813,
+      "firstEventMs": [
+        1.0373749999998836,
+        0.9923749999998108,
+        1.0384589999998752,
+        1.0977080000000115,
+        1.163332999999966,
+        1.2421249999999873,
+        1.2974169999999958,
+        1.3233750000001692,
+        1.2982500000000528,
+        1.3320830000000115,
+        1.3870830000000751,
+        3.4467090000000553,
+        3.6631669999999303,
+        3.8377499999999145,
+        4.124290999999857,
+        4.308833999999933
+      ],
+      "server": {
+        "cpuMs": 95.94,
+        "rssBeforeBytes": 76840960,
+        "rssAfterBytes": 83836928,
+        "processPeakRssBytes": 83836928,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch"
+        },
+        "nativeWrites": 10000
+      }
+    },
+    {
+      "repeat": 1,
+      "options": {
+        "events": 10000,
+        "clients": 16,
+        "bytes": 128,
+        "batch": 16,
+        "interval": 0,
+        "warmup": 1,
+        "timeout": 30000,
+        "setup": "optimized",
+        "native": "batch"
+      },
+      "elapsedMs": 106.43708300000003,
+      "events": 160000,
+      "wireBytes": 30364544,
+      "eventsPerSecond": 1503235.4841967996,
+      "wireMiBPerSecond": 272.0657587185802,
+      "firstEventMs": [
+        0.7377500000000055,
+        0.7016670000000431,
+        0.7236250000000837,
+        0.767415999999912,
+        0.810416000000032,
+        0.8710419999999885,
+        0.9305419999998321,
+        2.5311249999999745,
+        2.646208999999999,
+        2.7627080000002024,
+        2.9219580000001315,
+        3.0723749999999654,
+        3.2887920000000577,
+        3.451583000000028,
+        3.59637500000008,
+        3.7428330000000187
+      ],
+      "server": {
+        "cpuMs": 103.128,
+        "rssBeforeBytes": 75005952,
+        "rssAfterBytes": 83705856,
+        "processPeakRssBytes": 83705856,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch"
+        },
+        "nativeWrites": 10000
+      }
+    },
+    {
+      "repeat": 1,
+      "options": {
+        "events": 10000,
+        "clients": 16,
+        "bytes": 128,
+        "batch": 16,
+        "interval": 0,
+        "warmup": 1,
+        "timeout": 30000,
+        "setup": "optimized",
+        "native": "write"
+      },
+      "elapsedMs": 163.2069170000002,
+      "events": 160000,
+      "wireBytes": 30364544,
+      "eventsPerSecond": 980350.6060959402,
+      "wireMiBPerSecond": 177.43050524131561,
+      "firstEventMs": [
+        0.7754589999999553,
+        0.68100000000004,
+        0.6746660000001157,
+        0.7159159999998792,
+        0.7350839999999152,
+        0.770958999999948,
+        0.8064160000001266,
+        1.745541000000003,
+        1.778874999999971,
+        1.8044999999999618,
+        1.8220420000000104,
+        1.8390840000001845,
+        1.8640830000001642,
+        1.887625000000071,
+        1.9104999999999563,
+        1.9329580000000988
+      ],
+      "server": {
+        "cpuMs": 182.52,
+        "rssBeforeBytes": 74956800,
+        "rssAfterBytes": 82968576,
+        "processPeakRssBytes": 82968576,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "write"
+        },
+        "nativeWrites": 160000
+      }
+    },
+    {
+      "repeat": 2,
+      "options": {
+        "events": 10000,
+        "clients": 16,
+        "bytes": 128,
+        "batch": 16,
+        "interval": 0,
+        "warmup": 1,
+        "timeout": 30000,
+        "setup": "optimized",
+        "native": "write"
+      },
+      "elapsedMs": 158.26041600000008,
+      "events": 160000,
+      "wireBytes": 30364544,
+      "eventsPerSecond": 1010991.9084251613,
+      "wireMiBPerSecond": 182.97617606532444,
+      "firstEventMs": [
+        1.4536250000001019,
+        1.4004580000000715,
+        1.4134579999999914,
+        1.4324169999999867,
+        1.4589590000000499,
+        1.479332999999997,
+        1.531291999999894,
+        1.5609999999999218,
+        1.5909590000001117,
+        1.6127919999998994,
+        1.648542000000134,
+        1.6830830000001242,
+        1.6938339999999243,
+        1.7213329999999587,
+        1.7570000000000618,
+        1.8044169999998303
+      ],
+      "server": {
+        "cpuMs": 176.722,
+        "rssBeforeBytes": 75464704,
+        "rssAfterBytes": 83787776,
+        "processPeakRssBytes": 83787776,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "write"
+        },
+        "nativeWrites": 160000
+      }
+    },
+    {
+      "repeat": 2,
+      "options": {
+        "events": 10000,
+        "clients": 16,
+        "bytes": 128,
+        "batch": 16,
+        "interval": 0,
+        "warmup": 1,
+        "timeout": 30000,
+        "setup": "optimized",
+        "native": "batch"
+      },
+      "elapsedMs": 107.08916700000009,
+      "events": 160000,
+      "wireBytes": 30364544,
+      "eventsPerSecond": 1494082.0297911167,
+      "wireMiBPerSecond": 270.40910442591706,
+      "firstEventMs": [
+        0.6511669999999867,
+        0.5565000000001419,
+        0.5635409999999865,
+        0.5908340000000862,
+        0.6562920000001213,
+        0.6831670000001395,
+        0.7094170000000304,
+        0.743750000000091,
+        0.7725000000000364,
+        0.8022080000000642,
+        0.8339999999998327,
+        0.864292000000205,
+        1.2230829999998605,
+        1.2825840000000426,
+        1.3362919999999576,
+        1.3979170000002341
+      ],
+      "server": {
+        "cpuMs": 95.246,
+        "rssBeforeBytes": 77037568,
+        "rssAfterBytes": 84066304,
+        "processPeakRssBytes": 84066304,
+        "fatal": null,
+        "setup": {
+          "bridge": "direct",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch"
+        },
+        "nativeWrites": 10000
+      }
+    }
+  ]
+}

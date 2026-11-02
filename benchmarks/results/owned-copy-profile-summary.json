@@ -1,0 +1,1290 @@
+[
+  {
+    "source": "benchmarks/profiles/minksse-optimized-1793584160300.cpuprofile",
+    "instrumented": true,
+    "totalSampledMs": 2001.791,
+    "top": [
+      {
+        "function": "writev",
+        "url": "",
+        "line": 0,
+        "selfMs": 673.456,
+        "percentTotal": 33.642672986340735
+      },
+      {
+        "function": "(idle)",
+        "url": "",
+        "line": 0,
+        "selfMs": 240.506,
+        "percentTotal": 12.014540978553704
+      },
+      {
+        "function": "writevGeneric",
+        "url": "node:internal/stream_base_commons",
+        "line": 121,
+        "selfMs": 225.252,
+        "percentTotal": 11.25252336532635
+      },
+      {
+        "function": "(anonymous)",
+        "url": "",
+        "line": 0,
+        "selfMs": 181.416,
+        "percentTotal": 9.062684366150114
+      },
+      {
+        "function": "stageNativeBatch",
+        "url": "file:///Users/ogie/WebProjects/minksse/dist/server.js",
+        "line": 320,
+        "selfMs": 124.205,
+        "percentTotal": 6.2046936967945205
+      },
+      {
+        "function": "(program)",
+        "url": "",
+        "line": 0,
+        "selfMs": 83.25,
+        "percentTotal": 4.158775816256542
+      },
+      {
+        "function": "emitBatch",
+        "url": "file:///Users/ogie/WebProjects/minksse/dist/server.js",
+        "line": 416,
+        "selfMs": 73.498,
+        "percentTotal": 3.67161207139007
+      },
+      {
+        "function": "compactString",
+        "url": "file:///Users/ogie/WebProjects/minksse/dist/server.js",
+        "line": 26,
+        "selfMs": 73.047,
+        "percentTotal": 3.649082246847948
+      },
+      {
+        "function": "runMicrotasks",
+        "url": "",
+        "line": 0,
+        "selfMs": 26.374,
+        "percentTotal": 1.3175201606960967
+      },
+      {
+        "function": "queueFrame",
+        "url": "file:///Users/ogie/WebProjects/minksse/dist/server.js",
+        "line": 54,
+        "selfMs": 25.579,
+        "percentTotal": 1.2778057249732864
+      },
+      {
+        "function": "(anonymous)",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+        "line": 93,
+        "selfMs": 22.255,
+        "percentTotal": 1.1117544239133854
+      },
+      {
+        "function": "(garbage collector)",
+        "url": "",
+        "line": 0,
+        "selfMs": 17.415,
+        "percentTotal": 0.8699709410223145
+      },
+      {
+        "function": "setImmediate",
+        "url": "node:timers/promises",
+        "line": 94,
+        "selfMs": 16.665,
+        "percentTotal": 0.8325044922272106
+      },
+      {
+        "function": "processTicksAndRejections",
+        "url": "node:internal/process/task_queues",
+        "line": 71,
+        "selfMs": 16.375,
+        "percentTotal": 0.8180174653597704
+      },
+      {
+        "function": "nextTick",
+        "url": "node:internal/process/task_queues",
+        "line": 111,
+        "selfMs": 15.625,
+        "percentTotal": 0.7805510165646664
+      },
+      {
+        "function": "_send",
+        "url": "node:_http_outgoing",
+        "line": 341,
+        "selfMs": 15.499,
+        "percentTotal": 0.7742566531670889
+      },
+      {
+        "function": "processImmediate",
+        "url": "node:internal/timers",
+        "line": 456,
+        "selfMs": 12.96,
+        "percentTotal": 0.6474202351793968
+      },
+      {
+        "function": "runNextTicks",
+        "url": "node:internal/process/task_queues",
+        "line": 62,
+        "selfMs": 12.333,
+        "percentTotal": 0.6160982839866899
+      },
+      {
+        "function": "pump",
+        "url": "file:///Users/ogie/WebProjects/minksse/dist/node.js",
+        "line": 125,
+        "selfMs": 12.25,
+        "percentTotal": 0.6119519969866984
+      },
+      {
+        "function": "serializeData",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/core.mjs",
+        "line": 45,
+        "selfMs": 10.001,
+        "percentTotal": 0.4996026058664466
+      },
+      {
+        "function": "popFrame",
+        "url": "file:///Users/ogie/WebProjects/minksse/dist/server.js",
+        "line": 75,
+        "selfMs": 9.834,
+        "percentTotal": 0.4912600766014035
+      },
+      {
+        "function": "createWriteWrap",
+        "url": "node:internal/stream_base_commons",
+        "line": 108,
+        "selfMs": 8.874,
+        "percentTotal": 0.44330302214367034
+      },
+      {
+        "function": "onwrite",
+        "url": "node:internal/streams/writable",
+        "line": 613,
+        "selfMs": 7.707,
+        "percentTotal": 0.38500522781848856
+      },
+      {
+        "function": "writeOrBuffer",
+        "url": "node:internal/streams/writable",
+        "line": 546,
+        "selfMs": 7.668,
+        "percentTotal": 0.3830569724811431
+      },
+      {
+        "function": "write_",
+        "url": "node:_http_outgoing",
+        "line": 887,
+        "selfMs": 6.832,
+        "percentTotal": 0.3412943708908672
+      },
+      {
+        "function": "clearBuffer",
+        "url": "node:internal/streams/writable",
+        "line": 742,
+        "selfMs": 5.832,
+        "percentTotal": 0.2913391058307286
+      },
+      {
+        "function": "compileForInternalLoader",
+        "url": "node:internal/bootstrap/realm",
+        "line": 383,
+        "selfMs": 4.958,
+        "percentTotal": 0.2476782041681674
+      },
+      {
+        "function": "processPromiseRejections",
+        "url": "node:internal/process/promises",
+        "line": 439,
+        "selfMs": 4.21,
+        "percentTotal": 0.21031166590318368
+      },
+      {
+        "function": "RegExp: [\\r\\n]",
+        "url": "",
+        "line": 0,
+        "selfMs": 4.124,
+        "percentTotal": 0.20601551310801178
+      },
+      {
+        "function": "__require",
+        "url": "node:internal/deps/undici/undici",
+        "line": 5,
+        "selfMs": 3.792,
+        "percentTotal": 0.18943036510804576
+      },
+      {
+        "function": "callback",
+        "url": "node:internal/streams/writable",
+        "line": 762,
+        "selfMs": 3.583,
+        "percentTotal": 0.17898971471047678
+      },
+      {
+        "function": "SafeMap",
+        "url": "node:internal/per_context/primordials",
+        "line": 408,
+        "selfMs": 3.167,
+        "percentTotal": 0.1582083244454591
+      },
+      {
+        "function": "pushAsyncContext",
+        "url": "node:internal/async_hooks",
+        "line": 547,
+        "selfMs": 3.166,
+        "percentTotal": 0.15815836918039894
+      },
+      {
+        "function": "(anonymous)",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+        "line": 15,
+        "selfMs": 2.5,
+        "percentTotal": 0.12488816265034662
+      },
+      {
+        "function": "isIPv6",
+        "url": "node:internal/net",
+        "line": 48,
+        "selfMs": 2.5,
+        "percentTotal": 0.12488816265034662
+      },
+      {
+        "function": "afterWriteDispatched",
+        "url": "node:internal/stream_base_commons",
+        "line": 154,
+        "selfMs": 2.333,
+        "percentTotal": 0.11654563338530347
+      },
+      {
+        "function": "Socket._writeGeneric",
+        "url": "node:net",
+        "line": 935,
+        "selfMs": 2.333,
+        "percentTotal": 0.11654563338530347
+      },
+      {
+        "function": "afterWriteTick",
+        "url": "node:internal/streams/writable",
+        "line": 691,
+        "selfMs": 2.251,
+        "percentTotal": 0.11244930165037209
+      },
+      {
+        "function": "get",
+        "url": "node:internal/bootstrap/node",
+        "line": 97,
+        "selfMs": 2.209,
+        "percentTotal": 0.11035118051784627
+      },
+      {
+        "function": "next",
+        "url": "node:internal/per_context/primordials",
+        "line": 333,
+        "selfMs": 2.042,
+        "percentTotal": 0.10200865125280312
+      },
+      {
+        "function": "(anonymous)",
+        "url": "node:string_decoder",
+        "line": 1,
+        "selfMs": 1.334,
+        "percentTotal": 0.06664032359022495
+      },
+      {
+        "function": "hasObserver",
+        "url": "node:internal/perf/observe",
+        "line": 570,
+        "selfMs": 1.292,
+        "percentTotal": 0.06454220245769912
+      },
+      {
+        "function": "produce",
+        "url": "file:///Users/ogie/WebProjects/minksse/dist/server.js",
+        "line": 29,
+        "selfMs": 1.291,
+        "percentTotal": 0.06449224719263899
+      },
+      {
+        "function": "byteLength",
+        "url": "node:buffer",
+        "line": 785,
+        "selfMs": 1.291,
+        "percentTotal": 0.06449224719263899
+      },
+      {
+        "function": "moduleResolve",
+        "url": "node:internal/modules/esm/resolve",
+        "line": 831,
+        "selfMs": 1.25,
+        "percentTotal": 0.06244408132517331
+      }
+    ]
+  },
+  {
+    "source": "benchmarks/profiles/native-optimized-1793584158570.cpuprofile",
+    "instrumented": true,
+    "totalSampledMs": 1701.125,
+    "top": [
+      {
+        "function": "writev",
+        "url": "",
+        "line": 0,
+        "selfMs": 576.466,
+        "percentTotal": 33.88733926078331
+      },
+      {
+        "function": "writevGeneric",
+        "url": "node:internal/stream_base_commons",
+        "line": 121,
+        "selfMs": 276.083,
+        "percentTotal": 16.229436402380777
+      },
+      {
+        "function": "(idle)",
+        "url": "",
+        "line": 0,
+        "selfMs": 248.705,
+        "percentTotal": 14.620030861929607
+      },
+      {
+        "function": "handle",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+        "line": 143,
+        "selfMs": 131.582,
+        "percentTotal": 7.734998897788229
+      },
+      {
+        "function": "(anonymous)",
+        "url": "",
+        "line": 0,
+        "selfMs": 98.453,
+        "percentTotal": 5.787522962745243
+      },
+      {
+        "function": "runMicrotasks",
+        "url": "",
+        "line": 0,
+        "selfMs": 73.544,
+        "percentTotal": 4.323256668381218
+      },
+      {
+        "function": "(program)",
+        "url": "",
+        "line": 0,
+        "selfMs": 72.665,
+        "percentTotal": 4.271584980527592
+      },
+      {
+        "function": "(garbage collector)",
+        "url": "",
+        "line": 0,
+        "selfMs": 21.376,
+        "percentTotal": 1.2565802042765817
+      },
+      {
+        "function": "processImmediate",
+        "url": "node:internal/timers",
+        "line": 456,
+        "selfMs": 19,
+        "percentTotal": 1.1169079285766772
+      },
+      {
+        "function": "nextTick",
+        "url": "node:internal/process/task_queues",
+        "line": 111,
+        "selfMs": 15.374,
+        "percentTotal": 0.9037548681019913
+      },
+      {
+        "function": "setImmediate",
+        "url": "node:timers/promises",
+        "line": 94,
+        "selfMs": 14.915,
+        "percentTotal": 0.8767727239326916
+      },
+      {
+        "function": "write_",
+        "url": "node:_http_outgoing",
+        "line": 887,
+        "selfMs": 14.666,
+        "percentTotal": 0.8621353516055551
+      },
+      {
+        "function": "processTicksAndRejections",
+        "url": "node:internal/process/task_queues",
+        "line": 71,
+        "selfMs": 12.541,
+        "percentTotal": 0.7372180174884267
+      },
+      {
+        "function": "createWriteWrap",
+        "url": "node:internal/stream_base_commons",
+        "line": 108,
+        "selfMs": 10.793,
+        "percentTotal": 0.6344624880593724
+      },
+      {
+        "function": "onwrite",
+        "url": "node:internal/streams/writable",
+        "line": 613,
+        "selfMs": 10.251,
+        "percentTotal": 0.6026012197810272
+      },
+      {
+        "function": "serializeData",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/core.mjs",
+        "line": 45,
+        "selfMs": 8.75,
+        "percentTotal": 0.5143654934234697
+      },
+      {
+        "function": "_send",
+        "url": "node:_http_outgoing",
+        "line": 341,
+        "selfMs": 8.71,
+        "percentTotal": 0.5120141083106768
+      },
+      {
+        "function": "clearBuffer",
+        "url": "node:internal/streams/writable",
+        "line": 742,
+        "selfMs": 7.708,
+        "percentTotal": 0.453111911235212
+      },
+      {
+        "function": "writeOrBuffer",
+        "url": "node:internal/streams/writable",
+        "line": 546,
+        "selfMs": 7.667,
+        "percentTotal": 0.4507017414945992
+      },
+      {
+        "function": "runNextTicks",
+        "url": "node:internal/process/task_queues",
+        "line": 62,
+        "selfMs": 5.626,
+        "percentTotal": 0.3307223161143361
+      },
+      {
+        "function": "(anonymous)",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+        "line": 15,
+        "selfMs": 4.875,
+        "percentTotal": 0.28657506062164745
+      },
+      {
+        "function": "afterWriteTick",
+        "url": "node:internal/streams/writable",
+        "line": 691,
+        "selfMs": 4.709,
+        "percentTotal": 0.2768168124035565
+      },
+      {
+        "function": "connectionCorkNT",
+        "url": "node:_http_outgoing",
+        "line": 975,
+        "selfMs": 4.708,
+        "percentTotal": 0.27675802777573666
+      },
+      {
+        "function": "processPromiseRejections",
+        "url": "node:internal/process/promises",
+        "line": 439,
+        "selfMs": 3.416,
+        "percentTotal": 0.2008082886325226
+      },
+      {
+        "function": "Socket._writeGeneric",
+        "url": "node:net",
+        "line": 935,
+        "selfMs": 3.375,
+        "percentTotal": 0.19839811889190975
+      },
+      {
+        "function": "write",
+        "url": "node:_http_outgoing",
+        "line": 843,
+        "selfMs": 3.166,
+        "percentTotal": 0.1861121316775663
+      },
+      {
+        "function": "__require",
+        "url": "node:internal/deps/undici/undici",
+        "line": 5,
+        "selfMs": 2.5,
+        "percentTotal": 0.1469615695495628
+      },
+      {
+        "function": "popAsyncContext",
+        "url": "node:internal/async_hooks",
+        "line": 561,
+        "selfMs": 2.458,
+        "percentTotal": 0.14449261518113013
+      },
+      {
+        "function": "_writeRaw",
+        "url": "node:_http_outgoing",
+        "line": 367,
+        "selfMs": 2.375,
+        "percentTotal": 0.13961349107208465
+      },
+      {
+        "function": "compileForInternalLoader",
+        "url": "node:internal/bootstrap/realm",
+        "line": 383,
+        "selfMs": 2.333,
+        "percentTotal": 0.13714453670365198
+      },
+      {
+        "function": "nop",
+        "url": "node:internal/streams/writable",
+        "line": 93,
+        "selfMs": 2.125,
+        "percentTotal": 0.12491733411712837
+      },
+      {
+        "function": "(anonymous)",
+        "url": "node:internal/streams/readable",
+        "line": 1,
+        "selfMs": 1.333,
+        "percentTotal": 0.07835990888382688
+      },
+      {
+        "function": "#loadSync",
+        "url": "node:internal/modules/esm/loader",
+        "line": 807,
+        "selfMs": 1.292,
+        "percentTotal": 0.07594973914321405
+      },
+      {
+        "function": "lookupAndListen",
+        "url": "node:net",
+        "line": 2191,
+        "selfMs": 1.292,
+        "percentTotal": 0.07594973914321405
+      },
+      {
+        "function": "doWrite",
+        "url": "node:internal/streams/writable",
+        "line": 585,
+        "selfMs": 1.292,
+        "percentTotal": 0.07594973914321405
+      },
+      {
+        "function": "nativeFrame",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+        "line": 19,
+        "selfMs": 1.292,
+        "percentTotal": 0.07594973914321405
+      },
+      {
+        "function": "defaultTriggerAsyncIdScope",
+        "url": "node:internal/async_hooks",
+        "line": 463,
+        "selfMs": 1.291,
+        "percentTotal": 0.07589095451539422
+      },
+      {
+        "function": "initMessageChannel",
+        "url": "node:internal/child_process/serialization",
+        "line": 137,
+        "selfMs": 1.25,
+        "percentTotal": 0.0734807847747814
+      },
+      {
+        "function": "internalBinding",
+        "url": "node:internal/bootstrap/realm",
+        "line": 182,
+        "selfMs": 1.25,
+        "percentTotal": 0.0734807847747814
+      },
+      {
+        "function": "insert",
+        "url": "node:internal/deps/undici/undici",
+        "line": 1144,
+        "selfMs": 1.25,
+        "percentTotal": 0.0734807847747814
+      },
+      {
+        "function": "__name",
+        "url": "node:internal/deps/undici/undici",
+        "line": 4,
+        "selfMs": 1.25,
+        "percentTotal": 0.0734807847747814
+      },
+      {
+        "function": "lib/web/fetch/response.js",
+        "url": "node:internal/deps/undici/undici",
+        "line": 9884,
+        "selfMs": 1.25,
+        "percentTotal": 0.0734807847747814
+      },
+      {
+        "function": "getOwn",
+        "url": "node:internal/bootstrap/realm",
+        "line": 202,
+        "selfMs": 1.25,
+        "percentTotal": 0.0734807847747814
+      },
+      {
+        "function": "(anonymous)",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+        "line": 1,
+        "selfMs": 1.25,
+        "percentTotal": 0.0734807847747814
+      },
+      {
+        "function": "isIPv6",
+        "url": "node:internal/net",
+        "line": 48,
+        "selfMs": 1.25,
+        "percentTotal": 0.0734807847747814
+      }
+    ]
+  },
+  {
+    "source": "benchmarks/profiles/minksse-optimized-1793584698382.cpuprofile",
+    "instrumented": true,
+    "totalSampledMs": 1863.042,
+    "top": [
+      {
+        "function": "writev",
+        "url": "",
+        "line": 0,
+        "selfMs": 557.256,
+        "percentTotal": 29.911080909609122
+      },
+      {
+        "function": "(idle)",
+        "url": "",
+        "line": 0,
+        "selfMs": 239.581,
+        "percentTotal": 12.859667146527023
+      },
+      {
+        "function": "utf8Write",
+        "url": "node:internal/buffer",
+        "line": 1061,
+        "selfMs": 222.298,
+        "percentTotal": 11.931990797845673
+      },
+      {
+        "function": "(anonymous)",
+        "url": "",
+        "line": 0,
+        "selfMs": 155.288,
+        "percentTotal": 8.335185143437453
+      },
+      {
+        "function": "stageNativeBatch",
+        "url": "file:///Users/ogie/WebProjects/minksse/dist/server.js",
+        "line": 320,
+        "selfMs": 128.499,
+        "percentTotal": 6.897268016502044
+      },
+      {
+        "function": "(program)",
+        "url": "",
+        "line": 0,
+        "selfMs": 71.669,
+        "percentTotal": 3.846880531947213
+      },
+      {
+        "function": "FastBuffer",
+        "url": "node:internal/buffer",
+        "line": 963,
+        "selfMs": 68.456,
+        "percentTotal": 3.674420651815687
+      },
+      {
+        "function": "emitBatch",
+        "url": "file:///Users/ogie/WebProjects/minksse/dist/server.js",
+        "line": 433,
+        "selfMs": 55.621,
+        "percentTotal": 2.985493617427841
+      },
+      {
+        "function": "writevGeneric",
+        "url": "node:internal/stream_base_commons",
+        "line": 121,
+        "selfMs": 38.13,
+        "percentTotal": 2.046652732466579
+      },
+      {
+        "function": "(anonymous)",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+        "line": 93,
+        "selfMs": 35.206,
+        "percentTotal": 1.889705116685507
+      },
+      {
+        "function": "runMicrotasks",
+        "url": "",
+        "line": 0,
+        "selfMs": 33.207,
+        "percentTotal": 1.7824074819569287
+      },
+      {
+        "function": "(garbage collector)",
+        "url": "",
+        "line": 0,
+        "selfMs": 19.415,
+        "percentTotal": 1.0421128455504491
+      },
+      {
+        "function": "nextTick",
+        "url": "node:internal/process/task_queues",
+        "line": 111,
+        "selfMs": 18.872,
+        "percentTotal": 1.0129669647812556
+      },
+      {
+        "function": "_send",
+        "url": "node:_http_outgoing",
+        "line": 341,
+        "selfMs": 16.707,
+        "percentTotal": 0.8967591712908243
+      },
+      {
+        "function": "processTicksAndRejections",
+        "url": "node:internal/process/task_queues",
+        "line": 71,
+        "selfMs": 16.248,
+        "percentTotal": 0.8721220455577491
+      },
+      {
+        "function": "write_",
+        "url": "node:_http_outgoing",
+        "line": 887,
+        "selfMs": 13.792,
+        "percentTotal": 0.7402946364064793
+      },
+      {
+        "function": "popFrame",
+        "url": "file:///Users/ogie/WebProjects/minksse/dist/server.js",
+        "line": 75,
+        "selfMs": 13.208,
+        "percentTotal": 0.7089480537744184
+      },
+      {
+        "function": "processImmediate",
+        "url": "node:internal/timers",
+        "line": 456,
+        "selfMs": 12.792,
+        "percentTotal": 0.6866189812145942
+      },
+      {
+        "function": "createWriteWrap",
+        "url": "node:internal/stream_base_commons",
+        "line": 108,
+        "selfMs": 12.583,
+        "percentTotal": 0.6754007692794902
+      },
+      {
+        "function": "setImmediate",
+        "url": "node:timers/promises",
+        "line": 94,
+        "selfMs": 12.127,
+        "percentTotal": 0.6509246705119905
+      },
+      {
+        "function": "pump",
+        "url": "file:///Users/ogie/WebProjects/minksse/dist/node.js",
+        "line": 133,
+        "selfMs": 11.458,
+        "percentTotal": 0.6150156571886195
+      },
+      {
+        "function": "serializeData",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/core.mjs",
+        "line": 45,
+        "selfMs": 10,
+        "percentTotal": 0.5367565519188511
+      },
+      {
+        "function": "onwrite",
+        "url": "node:internal/streams/writable",
+        "line": 613,
+        "selfMs": 9.042,
+        "percentTotal": 0.48533527424502504
+      },
+      {
+        "function": "runNextTicks",
+        "url": "node:internal/process/task_queues",
+        "line": 62,
+        "selfMs": 7.749,
+        "percentTotal": 0.41593265208191765
+      },
+      {
+        "function": "compileForInternalLoader",
+        "url": "node:internal/bootstrap/realm",
+        "line": 383,
+        "selfMs": 7.709,
+        "percentTotal": 0.4137856258742422
+      },
+      {
+        "function": "writeOrBuffer",
+        "url": "node:internal/streams/writable",
+        "line": 546,
+        "selfMs": 5.543,
+        "percentTotal": 0.2975241567286191
+      },
+      {
+        "function": "processPromiseRejections",
+        "url": "node:internal/process/promises",
+        "line": 439,
+        "selfMs": 5.5,
+        "percentTotal": 0.2952161035553681
+      },
+      {
+        "function": "get desiredSize",
+        "url": "node:internal/webstreams/readablestream",
+        "line": 1062,
+        "selfMs": 4.709,
+        "percentTotal": 0.2527586602985869
+      },
+      {
+        "function": "clearBuffer",
+        "url": "node:internal/streams/writable",
+        "line": 742,
+        "selfMs": 4.667,
+        "percentTotal": 0.2505042827805278
+      },
+      {
+        "function": "(anonymous)",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+        "line": 1,
+        "selfMs": 3.833,
+        "percentTotal": 0.20573878635049558
+      },
+      {
+        "function": "_Request",
+        "url": "node:internal/deps/undici/undici",
+        "line": 10396,
+        "selfMs": 2.459,
+        "percentTotal": 0.13198843611684546
+      },
+      {
+        "function": "get",
+        "url": "node:internal/bootstrap/node",
+        "line": 97,
+        "selfMs": 2.459,
+        "percentTotal": 0.13198843611684546
+      },
+      {
+        "function": "__require",
+        "url": "node:internal/deps/undici/undici",
+        "line": 5,
+        "selfMs": 2.458,
+        "percentTotal": 0.13193476046165356
+      },
+      {
+        "function": "RegExp: [\\r\\n]",
+        "url": "",
+        "line": 0,
+        "selfMs": 2.333,
+        "percentTotal": 0.12522530356266795
+      },
+      {
+        "function": "write",
+        "url": "node:buffer",
+        "line": 1124,
+        "selfMs": 2.292,
+        "percentTotal": 0.12302460169980065
+      },
+      {
+        "function": "_write",
+        "url": "node:internal/streams/writable",
+        "line": 451,
+        "selfMs": 2.292,
+        "percentTotal": 0.12302460169980065
+      },
+      {
+        "function": "callback",
+        "url": "node:internal/streams/writable",
+        "line": 762,
+        "selfMs": 2.25,
+        "percentTotal": 0.12077022418174148
+      },
+      {
+        "function": "SafeMap",
+        "url": "node:internal/per_context/primordials",
+        "line": 408,
+        "selfMs": 2.126,
+        "percentTotal": 0.11411444293794773
+      },
+      {
+        "function": "afterWriteDispatched",
+        "url": "node:internal/stream_base_commons",
+        "line": 154,
+        "selfMs": 2.125,
+        "percentTotal": 0.11406076728275583
+      },
+      {
+        "function": "next",
+        "url": "node:internal/per_context/primordials",
+        "line": 333,
+        "selfMs": 2.083,
+        "percentTotal": 0.11180638976469666
+      },
+      {
+        "function": "lib/web/fetch/constants.js",
+        "url": "node:internal/deps/undici/undici",
+        "line": 3629,
+        "selfMs": 1.292,
+        "percentTotal": 0.06934894650791555
+      },
+      {
+        "function": "open",
+        "url": "",
+        "line": 0,
+        "selfMs": 1.292,
+        "percentTotal": 0.06934894650791555
+      },
+      {
+        "function": "internalModuleStat",
+        "url": "",
+        "line": 0,
+        "selfMs": 1.291,
+        "percentTotal": 0.06929527085272366
+      },
+      {
+        "function": "emitBeforeScript",
+        "url": "node:internal/async_hooks",
+        "line": 517,
+        "selfMs": 1.291,
+        "percentTotal": 0.06929527085272366
+      },
+      {
+        "function": "initSocketHandle",
+        "url": "node:net",
+        "line": 318,
+        "selfMs": 1.25,
+        "percentTotal": 0.06709456898985638
+      }
+    ]
+  },
+  {
+    "source": "benchmarks/profiles/native-optimized-1793584696699.cpuprofile",
+    "instrumented": true,
+    "totalSampledMs": 1652.5,
+    "top": [
+      {
+        "function": "writev",
+        "url": "",
+        "line": 0,
+        "selfMs": 604.332,
+        "percentTotal": 36.570771558245085
+      },
+      {
+        "function": "writevGeneric",
+        "url": "node:internal/stream_base_commons",
+        "line": 121,
+        "selfMs": 278.171,
+        "percentTotal": 16.83334341906203
+      },
+      {
+        "function": "(idle)",
+        "url": "",
+        "line": 0,
+        "selfMs": 168.676,
+        "percentTotal": 10.20732223903177
+      },
+      {
+        "function": "handle",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+        "line": 143,
+        "selfMs": 134.29,
+        "percentTotal": 8.126475037821484
+      },
+      {
+        "function": "(anonymous)",
+        "url": "",
+        "line": 0,
+        "selfMs": 128.746,
+        "percentTotal": 7.790983358547655
+      },
+      {
+        "function": "runMicrotasks",
+        "url": "",
+        "line": 0,
+        "selfMs": 68.83,
+        "percentTotal": 4.165204236006051
+      },
+      {
+        "function": "(program)",
+        "url": "",
+        "line": 0,
+        "selfMs": 51.872,
+        "percentTotal": 3.139001512859304
+      },
+      {
+        "function": "(garbage collector)",
+        "url": "",
+        "line": 0,
+        "selfMs": 24.292,
+        "percentTotal": 1.4700151285930407
+      },
+      {
+        "function": "nextTick",
+        "url": "node:internal/process/task_queues",
+        "line": 111,
+        "selfMs": 20.124,
+        "percentTotal": 1.2177912254160363
+      },
+      {
+        "function": "createWriteWrap",
+        "url": "node:internal/stream_base_commons",
+        "line": 108,
+        "selfMs": 16.415,
+        "percentTotal": 0.9933434190620273
+      },
+      {
+        "function": "_send",
+        "url": "node:_http_outgoing",
+        "line": 341,
+        "selfMs": 11.333,
+        "percentTotal": 0.6858093797276853
+      },
+      {
+        "function": "processImmediate",
+        "url": "node:internal/timers",
+        "line": 456,
+        "selfMs": 11.042,
+        "percentTotal": 0.6681996974281391
+      },
+      {
+        "function": "setImmediate",
+        "url": "node:timers/promises",
+        "line": 94,
+        "selfMs": 11,
+        "percentTotal": 0.6656580937972768
+      },
+      {
+        "function": "processTicksAndRejections",
+        "url": "node:internal/process/task_queues",
+        "line": 71,
+        "selfMs": 10.961,
+        "percentTotal": 0.6632980332829047
+      },
+      {
+        "function": "onwrite",
+        "url": "node:internal/streams/writable",
+        "line": 613,
+        "selfMs": 10.082,
+        "percentTotal": 0.610105900151286
+      },
+      {
+        "function": "clearBuffer",
+        "url": "node:internal/streams/writable",
+        "line": 742,
+        "selfMs": 8.791,
+        "percentTotal": 0.5319818456883509
+      },
+      {
+        "function": "compileForInternalLoader",
+        "url": "node:internal/bootstrap/realm",
+        "line": 383,
+        "selfMs": 7.625,
+        "percentTotal": 0.46142208774583965
+      },
+      {
+        "function": "serializeData",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/core.mjs",
+        "line": 45,
+        "selfMs": 7.417,
+        "percentTotal": 0.4488350983358548
+      },
+      {
+        "function": "runNextTicks",
+        "url": "node:internal/process/task_queues",
+        "line": 62,
+        "selfMs": 6.418,
+        "percentTotal": 0.38838124054462936
+      },
+      {
+        "function": "write_",
+        "url": "node:_http_outgoing",
+        "line": 887,
+        "selfMs": 5.582,
+        "percentTotal": 0.33779122541603634
+      },
+      {
+        "function": "(anonymous)",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+        "line": 1,
+        "selfMs": 5,
+        "percentTotal": 0.30257186081694404
+      },
+      {
+        "function": "Socket._writeGeneric",
+        "url": "node:net",
+        "line": 935,
+        "selfMs": 4.792,
+        "percentTotal": 0.28998487140695917
+      },
+      {
+        "function": "writeOrBuffer",
+        "url": "node:internal/streams/writable",
+        "line": 546,
+        "selfMs": 4.583,
+        "percentTotal": 0.27733736762481087
+      },
+      {
+        "function": "SafeMap",
+        "url": "node:internal/per_context/primordials",
+        "line": 408,
+        "selfMs": 4.5,
+        "percentTotal": 0.2723146747352496
+      },
+      {
+        "function": "afterWriteTick",
+        "url": "node:internal/streams/writable",
+        "line": 691,
+        "selfMs": 4.458,
+        "percentTotal": 0.2697730711043873
+      },
+      {
+        "function": "processPromiseRejections",
+        "url": "node:internal/process/promises",
+        "line": 439,
+        "selfMs": 4.084,
+        "percentTotal": 0.24714069591527987
+      },
+      {
+        "function": "nativeFrame",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+        "line": 19,
+        "selfMs": 3.167,
+        "percentTotal": 0.19164901664145234
+      },
+      {
+        "function": "__require",
+        "url": "node:internal/deps/undici/undici",
+        "line": 5,
+        "selfMs": 2.542,
+        "percentTotal": 0.15382753403933436
+      },
+      {
+        "function": "byteLength",
+        "url": "node:buffer",
+        "line": 785,
+        "selfMs": 2.417,
+        "percentTotal": 0.14626323751891074
+      },
+      {
+        "function": "get",
+        "url": "node:internal/bootstrap/node",
+        "line": 97,
+        "selfMs": 2.251,
+        "percentTotal": 0.1362178517397882
+      },
+      {
+        "function": "_write",
+        "url": "node:internal/streams/writable",
+        "line": 451,
+        "selfMs": 2.084,
+        "percentTotal": 0.12611195158850227
+      },
+      {
+        "function": "get",
+        "url": "node:internal/streams/writable",
+        "line": 1008,
+        "selfMs": 1.917,
+        "percentTotal": 0.11600605143721635
+      },
+      {
+        "function": "get signal",
+        "url": "node:internal/abort_controller",
+        "line": 497,
+        "selfMs": 1.292,
+        "percentTotal": 0.07818456883509833
+      },
+      {
+        "function": "cache",
+        "url": "node:internal/http",
+        "line": 29,
+        "selfMs": 1.292,
+        "percentTotal": 0.07818456883509833
+      },
+      {
+        "function": "(anonymous)",
+        "url": "file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs",
+        "line": 15,
+        "selfMs": 1.291,
+        "percentTotal": 0.07812405446293494
+      },
+      {
+        "function": "(anonymous)",
+        "url": "node:internal/dns/utils",
+        "line": 86,
+        "selfMs": 1.291,
+        "percentTotal": 0.07812405446293494
+      },
+      {
+        "function": "_forkChild",
+        "url": "node:child_process",
+        "line": 177,
+        "selfMs": 1.25,
+        "percentTotal": 0.07564296520423601
+      },
+      {
+        "function": "syncLink",
+        "url": "node:internal/modules/esm/module_job",
+        "line": 129,
+        "selfMs": 1.25,
+        "percentTotal": 0.07564296520423601
+      },
+      {
+        "function": "createWritableStdioStream",
+        "url": "node:internal/bootstrap/switches/is_main_thread",
+        "line": 50,
+        "selfMs": 1.25,
+        "percentTotal": 0.07564296520423601
+      },
+      {
+        "function": "#translate",
+        "url": "node:internal/modules/esm/loader",
+        "line": 464,
+        "selfMs": 1.25,
+        "percentTotal": 0.07564296520423601
+      },
+      {
+        "function": "isIPv6",
+        "url": "node:internal/net",
+        "line": 48,
+        "selfMs": 1.25,
+        "percentTotal": 0.07564296520423601
+      },
+      {
+        "function": "writeUtf8String",
+        "url": "",
+        "line": 0,
+        "selfMs": 1.25,
+        "percentTotal": 0.07564296520423601
+      },
+      {
+        "function": "parserOnIncoming",
+        "url": "node:_http_server",
+        "line": 1084,
+        "selfMs": 1.25,
+        "percentTotal": 0.07564296520423601
+      },
+      {
+        "function": "afterWriteDispatched",
+        "url": "node:internal/stream_base_commons",
+        "line": 154,
+        "selfMs": 1.166,
+        "percentTotal": 0.07055975794251135
+      },
+      {
+        "function": "Writable.uncork",
+        "url": "node:internal/streams/writable",
+        "line": 518,
+        "selfMs": 1.125,
+        "percentTotal": 0.0680786686838124
+      }
+    ]
+  }
+]

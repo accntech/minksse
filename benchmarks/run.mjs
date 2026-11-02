@@ -3,11 +3,13 @@ import { dirname, resolve } from 'node:path';
 import { cpus, availableParallelism, platform, arch, release } from 'node:os';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { parseOptions, summarize, percentile } from './core.mjs';
+import { pathToFileURL, fileURLToPath } from 'node:url';
+import { parseOptions, summarize, percentile, resolveSetup } from './core.mjs';
 import { measureTarget } from './harness.mjs';
 
 const options = parseOptions(process.argv.slice(2));
-const packageNames = ['hono', 'fastify', '@fastify/sse', 'better-sse', 'sveltekit-sse', 'svelte', '@sveltejs/kit', 'esbuild'];
+const minkDirectory = options.minkbuild ? pathToFileURL(resolve(options.minkbuild) + '/') : new URL('../dist/', import.meta.url);
+const packageNames = ['@hono/node-server', 'hono', 'fastify', '@fastify/sse', 'better-sse', 'sveltekit-sse', 'svelte', '@sveltejs/kit', 'esbuild'];
 const versions = Object.fromEntries(await Promise.all(packageNames.map(async name => {
   const json = JSON.parse(await readFile(new URL(`./node_modules/${name}/package.json`, import.meta.url)));
   return [name, json.version];
@@ -15,7 +17,7 @@ const versions = Object.fromEntries(await Promise.all(packageNames.map(async nam
 const hashFile = async url => createHash('sha256').update(await readFile(url)).digest('hex');
 const root = resolve(import.meta.dirname, '..');
 const report = {
-  schemaVersion: 1,
+  schemaVersion: 4,
   createdAt: new Date().toISOString(),
   environment: { node: process.version, v8: process.versions.v8, os: platform(), osRelease: release(), arch: arch(),
     cpu: cpus()[0].model, logicalCpus: cpus().length, availableParallelism: availableParallelism() },
@@ -23,19 +25,32 @@ const report = {
   source: {
     commit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
     dirty: Boolean(execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' }).trim()),
-    localServerSha256: await hashFile(new URL('../dist/server.js', import.meta.url)),
-    lockSha256: await hashFile(new URL('./package-lock.json', import.meta.url))
+    minkBuildDirectory: fileURLToPath(minkDirectory),
+    localServerSha256: await hashFile(new URL('server.js', minkDirectory)),
+    localNodeSha256: await hashFile(new URL('node.js', minkDirectory)),
+    localCapabilitiesSha256: await hashFile(new URL('producer-capabilities.js', minkDirectory)).catch(error => {
+      if (error.code === 'ENOENT') return null;
+      throw error;
+    }),
+    lockSha256: await hashFile(new URL('./package-lock.json', import.meta.url)),
+    benchmarkServerSha256: await hashFile(new URL('./server.mjs', import.meta.url)),
+    benchmarkHarnessSha256: await hashFile(new URL('./harness.mjs', import.meta.url)),
+    benchmarkCoreSha256: await hashFile(new URL('./core.mjs', import.meta.url)),
+    benchmarkLoaderSha256: await hashFile(new URL('./load-workers.mjs', import.meta.url)),
+    benchmarkWorkerSha256: await hashFile(new URL('./load-worker.mjs', import.meta.url))
   },
   options,
+  effectiveSetup: Object.fromEntries(options.targets.map(target => [target, resolveSetup(options, target)])),
   methodology: {
-    transport: 'HTTP/1.1 POST over 127.0.0.1, Node fetch client in parent, isolated fresh server process per repeat',
-    payload: 'Pre-serialized JSON {sequence,payload}, payload is bytes ASCII x characters, named message events, IDs 1..events',
+    transport: `HTTP/1.1 POST over 127.0.0.1, Node fetch with ${options.loaders} client loader(s), isolated fresh server process per repeat; workers persist through warmup`,
+    payload: `Pre-serialized JSON {sequence,payload}; ${options.payload} payload with ${options.bytes} raw UTF-8 bytes, named message events, IDs 1..events; multiline mode adds mixed JSON whitespace line endings`,
     schedule: 'All candidates yield each batch; native/Hono/Fastify also await backpressure where their APIs expose it',
     order: 'Rotated candidate order by repeat; sequential measured trials',
     warmup: 'Each fresh server gets warmup full workload passes before its one measured pass',
     firstEvent: 'Request start until first chunk containing a complete validated event is processed; not per-event latency',
     memory: 'Server RSS before/after measured workload; processPeakRssBytes includes imports and warmup',
     cpu: 'Server CPU user+system delta covering measured workload and stats IPC; excludes startup and warmup',
+    clientCpu: 'Parent process user+system CPU delta covering fetch, body parsing and independent validation; high utilization can cap throughput',
     scope: 'Server framing/HTTP delivery only. No package clients, Kit routing/build, browser UI, broadcast, replay, slow consumers or production network'
   },
   samples: [],
@@ -61,6 +76,7 @@ for (const target of options.targets) {
     firstEventMedianMs: summarize(samples.map(sample => percentile(sample.firstEventMs, 0.5))),
     firstEventP95Ms: summarize(samples.map(sample => percentile(sample.firstEventMs, 0.95))),
     serverCpuMs: summarize(samples.map(sample => sample.server.cpuMs)),
+    clientCpuMs: summarize(samples.map(sample => sample.clientCpuMs)),
     serverRssAfterMiB: summarize(samples.map(sample => sample.server.rssAfterBytes / 1048576)),
     serverProcessPeakRssMiB: summarize(samples.map(sample => sample.server.processPeakRssBytes / 1048576))
   };
@@ -69,7 +85,7 @@ for (const target of options.targets) {
 const f = value => value.toLocaleString('en-US', { maximumFractionDigits: 2 });
 const lines = [
   '# SSE HTTP benchmark results', '',
-  `Generated ${report.createdAt}. ${options.clients} concurrent clients × ${options.events} events; ${options.bytes}-byte ASCII payload per event, batch ${options.batch}, interval ${options.interval} ms.`, '',
+  `Generated ${report.createdAt}. Setup: **${options.setup}**, effective strategies ${JSON.stringify(report.effectiveSetup)}. ${options.clients} concurrent clients × ${options.events} events; ${options.bytes}-byte ASCII payload per event, batch ${options.batch}, interval ${options.interval} ms.`, '',
   `${options.repeats} measured repeats, ${options.warmup} full warmup pass(es) per fresh server. ${report.environment.node}, ${report.environment.cpu}, ${report.environment.os}/${report.environment.arch}.`, '',
   '| Candidate | Median events/s | Mean events/s (95% CI) | Median completion ms | Median first event ms | Median per-trial p95 first event ms | Median server CPU ms | Median RSS after MiB |',
   '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |'
@@ -81,7 +97,7 @@ for (const target of options.targets) {
 }
 lines.push('', 'All recorded streams passed exact event-count, order, payload and HTTP validation. Any error aborts the run without writing a successful report.', '',
   'Throughput includes connection/request overhead, socket delivery and independent client validation. Both processes share this machine; client CPU and scheduler contention can cap results. Small samples and wide confidence intervals do not establish a reliable ranking. The Student-t interval describes mean throughput across these repeats, not a production guarantee.', '',
-  'The native baseline uses Node HTTP writes. Hono includes its router; Fastify includes its router and plugin. Hono, sveltekit-sse and MinkSSE use the same Web Response → Node HTTP adapter. sveltekit-sse uses its real published producer bundled by esbuild; SvelteKit routing and the package clients are outside this measurement. Native/Hono/Fastify await exposed write backpressure; producer APIs cannot be made identical in that respect. See README.md for scope and reproducibility.', '',
+  `The native baseline uses Node HTTP writes. Hono includes its router; Fastify includes its router and plugin. Hono, sveltekit-sse and MinkSSE use the selected per-candidate Web Response → Node HTTP adapter (effective strategies above). sveltekit-sse uses its real published producer bundled by esbuild; SvelteKit routing and the package clients are outside this measurement. Native/Hono/Fastify await exposed write backpressure; producer APIs cannot be made identical in that respect. See README.md for scope and reproducibility.`, '',
   `Package versions: ${Object.entries(versions).map(([name, version]) => `${name} ${version}`).join(', ')}.`, '',
   `Raw samples and environment: ${options.output.split('/').at(-1)}. Local MinkSSE source commit ${report.source.commit}; dirty checkout: ${report.source.dirty}. The JSON includes the local compiled server and dependency lock hashes.`, ''
 );

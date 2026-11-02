@@ -1,0 +1,54 @@
+{
+  "note": "Diagnostic only; up to eight two-pass single-loader16stream attempts, stopped on first failure. Not ranking samples.",
+  "options": {
+    "events": 20000,
+    "clients": 16,
+    "bytes": 128,
+    "batch": 16,
+    "interval": 0,
+    "repeats": 5,
+    "warmup": 1,
+    "timeout": 30000,
+    "loaders": 1,
+    "payload": "ascii",
+    "targets": [
+      "minksse"
+    ],
+    "output": "results/latest.json",
+    "setup": "optimized",
+    "bridge": "auto",
+    "fastify": "auto",
+    "better": "auto",
+    "cork": "auto",
+    "native": "auto",
+    "minkapi": "auto",
+    "coalesce": "auto",
+    "profile": "",
+    "minkbuild": ""
+  },
+  "results": [
+    {
+      "repeat": 0,
+      "error": "TypeError: terminated\n    at Fetch.onAborted (node:internal/deps/undici/undici:12141:53)\n    at Fetch.emit (node:events:508:28)\n    at Fetch.terminate (node:internal/deps/undici/undici:11300:14)\n    at Object.onError (node:internal/deps/undici/undici:12260:38)\n    at Request.onError (node:internal/deps/undici/undici:2754:31)\n    at Object.errorRequest (node:internal/deps/undici/undici:1641:17)\n    at Socket.onHttpSocketClose (node:internal/deps/undici/undici:7173:14)\n    at Socket.emit (node:events:520:35)\n    at TCP.<anonymous> (node:net:346:12)",
+      "type": "stats",
+      "stats": {
+        "cpuMs": 290.84,
+        "rssBeforeBytes": 67665920,
+        "rssAfterBytes": 93765632,
+        "processPeakRssBytes": 93782016,
+        "fatal": "Error: SSE client exceeded the stream buffer limit.\n    at emitValue (file:///Users/ogie/WebProjects/minksse/dist/server.js:169:27)\n    at emitBatch (file:///Users/ogie/WebProjects/minksse/dist/server.js:301:31)\n    at file:///Users/ogie/WebProjects/minksse/benchmarks/server.mjs:98:28\n    at runNextTicks (node:internal/process/task_queues:64:5)\n    at process.processImmediate (node:internal/timers:472:9)",
+        "setup": {
+          "bridge": "minksse-node",
+          "fastify": "send",
+          "better": "batch",
+          "cork": "off",
+          "native": "batch",
+          "minkApi": "batch",
+          "coalesceBytes": 16384
+        },
+        "nativeWrites": null
+      },
+      "stderr": ""
+    }
+  ]
+}

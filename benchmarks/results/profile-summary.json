@@ -1,0 +1,640 @@
+{
+  "method": "V8 --cpu-prof sampled leaf frames; counts, not exact CPU accounting; full process lifetime includes startup and warmup. Each target runs 16 clients x 50000 events in warmup and measured passes. Profile throughput is instrumented and excluded from ranking.",
+  "profiles": [
+    {
+      "file": "minksse-baseline-1793543789229.cpuprofile",
+      "sha256": "cb9dedfcd332419b9970afeb3576fd61ca0bf8d2207731540b7d8b2d4413a9ab",
+      "samples": 4873,
+      "durationMs": 5754.875,
+      "groups": {
+        "writev/writevGeneric": {
+          "samples": 2857,
+          "percent": 58.63
+        },
+        "other": {
+          "samples": 856,
+          "percent": 17.57
+        },
+        "UTF-8 encoding": {
+          "samples": 469,
+          "percent": 9.62
+        },
+        "Node Web Streams (own leaf samples)": {
+          "samples": 270,
+          "percent": 5.54
+        },
+        "MinkSSE source (own leaf samples)": {
+          "samples": 160,
+          "percent": 3.28
+        },
+        "regular expressions": {
+          "samples": 145,
+          "percent": 2.98
+        },
+        "idle": {
+          "samples": 76,
+          "percent": 1.56
+        },
+        "garbage collection": {
+          "samples": 40,
+          "percent": 0.82
+        }
+      },
+      "topLeafFrames": [
+        {
+          "function": "writev",
+          "url": "",
+          "line": 0,
+          "samples": 2593,
+          "percent": 53.21
+        },
+        {
+          "function": "encode",
+          "url": "node:internal/encoding",
+          "line": 351,
+          "samples": 346,
+          "percent": 7.1
+        },
+        {
+          "function": "writevGeneric",
+          "url": "node:internal/stream_base_commons",
+          "line": 121,
+          "samples": 264,
+          "percent": 5.42
+        },
+        {
+          "function": "RegExp: [\\r\\n\\u0080-\\uFFFF]",
+          "url": "",
+          "line": 0,
+          "samples": 145,
+          "percent": 2.98
+        },
+        {
+          "function": "encodeUtf8String",
+          "url": "",
+          "line": 0,
+          "samples": 123,
+          "percent": 2.52
+        },
+        {
+          "function": "(program)",
+          "url": "",
+          "line": 0,
+          "samples": 93,
+          "percent": 1.91
+        },
+        {
+          "function": "(idle)",
+          "url": "",
+          "line": 0,
+          "samples": 76,
+          "percent": 1.56
+        },
+        {
+          "function": "emit",
+          "url": "dist/server.js",
+          "line": 118,
+          "samples": 75,
+          "percent": 1.54
+        },
+        {
+          "function": "nextTick",
+          "url": "node:internal/process/task_queues",
+          "line": 111,
+          "samples": 72,
+          "percent": 1.48
+        },
+        {
+          "function": "runMicrotasks",
+          "url": "",
+          "line": 0,
+          "samples": 72,
+          "percent": 1.48
+        },
+        {
+          "function": "_send",
+          "url": "node:_http_outgoing",
+          "line": 341,
+          "samples": 62,
+          "percent": 1.27
+        },
+        {
+          "function": "processTicksAndRejections",
+          "url": "node:internal/process/task_queues",
+          "line": 71,
+          "samples": 55,
+          "percent": 1.13
+        },
+        {
+          "function": "readableStreamDefaultControllerCallPullIfNeeded",
+          "url": "node:internal/webstreams/readablestream",
+          "line": 2374,
+          "samples": 52,
+          "percent": 1.07
+        },
+        {
+          "function": "read",
+          "url": "node:internal/webstreams/adapters",
+          "line": 544,
+          "samples": 49,
+          "percent": 1.01
+        },
+        {
+          "function": "compactString",
+          "url": "dist/server.js",
+          "line": 22,
+          "samples": 46,
+          "percent": 0.94
+        },
+        {
+          "function": "clearBuffer",
+          "url": "node:internal/streams/writable",
+          "line": 742,
+          "samples": 45,
+          "percent": 0.92
+        },
+        {
+          "function": "(garbage collector)",
+          "url": "",
+          "line": 0,
+          "samples": 40,
+          "percent": 0.82
+        },
+        {
+          "function": "createWriteWrap",
+          "url": "node:internal/stream_base_commons",
+          "line": 108,
+          "samples": 40,
+          "percent": 0.82
+        },
+        {
+          "function": "writeOrBuffer",
+          "url": "node:internal/streams/writable",
+          "line": 546,
+          "samples": 39,
+          "percent": 0.8
+        },
+        {
+          "function": "write_",
+          "url": "node:_http_outgoing",
+          "line": 887,
+          "samples": 37,
+          "percent": 0.76
+        },
+        {
+          "function": "readableStreamAddReadRequest",
+          "url": "node:internal/webstreams/readablestream",
+          "line": 2136,
+          "samples": 30,
+          "percent": 0.62
+        },
+        {
+          "function": "onwrite",
+          "url": "node:internal/streams/writable",
+          "line": 613,
+          "samples": 26,
+          "percent": 0.53
+        },
+        {
+          "function": "Readable.read",
+          "url": "node:internal/streams/readable",
+          "line": 645,
+          "samples": 26,
+          "percent": 0.53
+        },
+        {
+          "function": "addChunk",
+          "url": "node:internal/streams/readable",
+          "line": 548,
+          "samples": 24,
+          "percent": 0.49
+        },
+        {
+          "function": "readableStreamFulfillReadRequest",
+          "url": "node:internal/webstreams/readablestream",
+          "line": 2105,
+          "samples": 23,
+          "percent": 0.47
+        }
+      ]
+    },
+    {
+      "file": "minksse-optimized-1793543795141.cpuprofile",
+      "sha256": "f17eb0930511df3ba733009f99a3148221b23c97d0ba7e6e5ae92c3faf047eb5",
+      "samples": 2287,
+      "durationMs": 2643.958,
+      "groups": {
+        "writev/writevGeneric": {
+          "samples": 770,
+          "percent": 33.67
+        },
+        "other": {
+          "samples": 507,
+          "percent": 22.17
+        },
+        "UTF-8 encoding": {
+          "samples": 363,
+          "percent": 15.87
+        },
+        "Node Web Streams (own leaf samples)": {
+          "samples": 213,
+          "percent": 9.31
+        },
+        "regular expressions": {
+          "samples": 173,
+          "percent": 7.56
+        },
+        "MinkSSE source (own leaf samples)": {
+          "samples": 143,
+          "percent": 6.25
+        },
+        "idle": {
+          "samples": 89,
+          "percent": 3.89
+        },
+        "garbage collection": {
+          "samples": 29,
+          "percent": 1.27
+        }
+      },
+      "topLeafFrames": [
+        {
+          "function": "writev",
+          "url": "",
+          "line": 0,
+          "samples": 523,
+          "percent": 22.87
+        },
+        {
+          "function": "encode",
+          "url": "node:internal/encoding",
+          "line": 351,
+          "samples": 283,
+          "percent": 12.37
+        },
+        {
+          "function": "writevGeneric",
+          "url": "node:internal/stream_base_commons",
+          "line": 121,
+          "samples": 247,
+          "percent": 10.8
+        },
+        {
+          "function": "RegExp: [\\r\\n\\u0080-\\uFFFF]",
+          "url": "",
+          "line": 0,
+          "samples": 173,
+          "percent": 7.56
+        },
+        {
+          "function": "(idle)",
+          "url": "",
+          "line": 0,
+          "samples": 89,
+          "percent": 3.89
+        },
+        {
+          "function": "encodeUtf8String",
+          "url": "",
+          "line": 0,
+          "samples": 80,
+          "percent": 3.5
+        },
+        {
+          "function": "emit",
+          "url": "dist/server.js",
+          "line": 118,
+          "samples": 75,
+          "percent": 3.28
+        },
+        {
+          "function": "(program)",
+          "url": "",
+          "line": 0,
+          "samples": 71,
+          "percent": 3.1
+        },
+        {
+          "function": "_send",
+          "url": "node:_http_outgoing",
+          "line": 341,
+          "samples": 58,
+          "percent": 2.54
+        },
+        {
+          "function": "webHandler",
+          "url": "benchmarks/server.mjs",
+          "line": 46,
+          "samples": 53,
+          "percent": 2.32
+        },
+        {
+          "function": "compactString",
+          "url": "dist/server.js",
+          "line": 22,
+          "samples": 44,
+          "percent": 1.92
+        },
+        {
+          "function": "runMicrotasks",
+          "url": "",
+          "line": 0,
+          "samples": 37,
+          "percent": 1.62
+        },
+        {
+          "function": "write_",
+          "url": "node:_http_outgoing",
+          "line": 887,
+          "samples": 34,
+          "percent": 1.49
+        },
+        {
+          "function": "readableStreamDefaultControllerCallPullIfNeeded",
+          "url": "node:internal/webstreams/readablestream",
+          "line": 2374,
+          "samples": 32,
+          "percent": 1.4
+        },
+        {
+          "function": "(garbage collector)",
+          "url": "",
+          "line": 0,
+          "samples": 29,
+          "percent": 1.27
+        },
+        {
+          "function": "readableStreamDefaultControllerPullSteps",
+          "url": "node:internal/webstreams/readablestream",
+          "line": 2419,
+          "samples": 29,
+          "percent": 1.27
+        },
+        {
+          "function": "pump",
+          "url": "benchmarks/server.mjs",
+          "line": 21,
+          "samples": 28,
+          "percent": 1.22
+        },
+        {
+          "function": "readableStreamFulfillReadRequest",
+          "url": "node:internal/webstreams/readablestream",
+          "line": 2105,
+          "samples": 27,
+          "percent": 1.18
+        },
+        {
+          "function": "",
+          "url": "benchmarks/server.mjs",
+          "line": 84,
+          "samples": 25,
+          "percent": 1.09
+        },
+        {
+          "function": "FastBuffer",
+          "url": "node:internal/buffer",
+          "line": 963,
+          "samples": 25,
+          "percent": 1.09
+        },
+        {
+          "function": "enqueue",
+          "url": "node:internal/webstreams/readablestream",
+          "line": 1075,
+          "samples": 21,
+          "percent": 0.92
+        },
+        {
+          "function": "writeOrBuffer",
+          "url": "node:internal/streams/writable",
+          "line": 546,
+          "samples": 19,
+          "percent": 0.83
+        },
+        {
+          "function": "pull",
+          "url": "dist/server.js",
+          "line": 247,
+          "samples": 18,
+          "percent": 0.79
+        },
+        {
+          "function": "DefaultReadRequest",
+          "url": "node:internal/webstreams/readablestream",
+          "line": 789,
+          "samples": 15,
+          "percent": 0.66
+        },
+        {
+          "function": "readableStreamAddReadRequest",
+          "url": "node:internal/webstreams/readablestream",
+          "line": 2136,
+          "samples": 15,
+          "percent": 0.66
+        }
+      ]
+    },
+    {
+      "file": "native-baseline-1793543787538.cpuprofile",
+      "sha256": "cfa28983616fc8251441569f5e2b7d5facb94427e229d7de7f140b134e3b28b0",
+      "samples": 1264,
+      "durationMs": 1535.666,
+      "groups": {
+        "writev/writevGeneric": {
+          "samples": 830,
+          "percent": 65.66
+        },
+        "other": {
+          "samples": 336,
+          "percent": 26.58
+        },
+        "idle": {
+          "samples": 83,
+          "percent": 6.57
+        },
+        "garbage collection": {
+          "samples": 15,
+          "percent": 1.19
+        }
+      },
+      "topLeafFrames": [
+        {
+          "function": "writev",
+          "url": "",
+          "line": 0,
+          "samples": 536,
+          "percent": 42.41
+        },
+        {
+          "function": "writevGeneric",
+          "url": "node:internal/stream_base_commons",
+          "line": 121,
+          "samples": 294,
+          "percent": 23.26
+        },
+        {
+          "function": "(idle)",
+          "url": "",
+          "line": 0,
+          "samples": 83,
+          "percent": 6.57
+        },
+        {
+          "function": "",
+          "url": "",
+          "line": 0,
+          "samples": 50,
+          "percent": 3.96
+        },
+        {
+          "function": "_send",
+          "url": "node:_http_outgoing",
+          "line": 341,
+          "samples": 47,
+          "percent": 3.72
+        },
+        {
+          "function": "write_",
+          "url": "node:_http_outgoing",
+          "line": 887,
+          "samples": 31,
+          "percent": 2.45
+        },
+        {
+          "function": "pump",
+          "url": "benchmarks/server.mjs",
+          "line": 21,
+          "samples": 31,
+          "percent": 2.45
+        },
+        {
+          "function": "writeOrBuffer",
+          "url": "node:internal/streams/writable",
+          "line": 546,
+          "samples": 25,
+          "percent": 1.98
+        },
+        {
+          "function": "(garbage collector)",
+          "url": "",
+          "line": 0,
+          "samples": 15,
+          "percent": 1.19
+        },
+        {
+          "function": "afterWriteTick",
+          "url": "node:internal/streams/writable",
+          "line": 691,
+          "samples": 12,
+          "percent": 0.95
+        },
+        {
+          "function": "(program)",
+          "url": "",
+          "line": 0,
+          "samples": 11,
+          "percent": 0.87
+        },
+        {
+          "function": "",
+          "url": "benchmarks/server.mjs",
+          "line": 11,
+          "samples": 9,
+          "percent": 0.71
+        },
+        {
+          "function": "nextTick",
+          "url": "node:internal/process/task_queues",
+          "line": 111,
+          "samples": 8,
+          "percent": 0.63
+        },
+        {
+          "function": "first",
+          "url": "benchmarks/server.mjs",
+          "line": 124,
+          "samples": 8,
+          "percent": 0.63
+        },
+        {
+          "function": "runMicrotasks",
+          "url": "",
+          "line": 0,
+          "samples": 8,
+          "percent": 0.63
+        },
+        {
+          "function": "setImmediate",
+          "url": "node:timers/promises",
+          "line": 94,
+          "samples": 8,
+          "percent": 0.63
+        },
+        {
+          "function": "processTicksAndRejections",
+          "url": "node:internal/process/task_queues",
+          "line": 71,
+          "samples": 7,
+          "percent": 0.55
+        },
+        {
+          "function": "onwrite",
+          "url": "node:internal/streams/writable",
+          "line": 613,
+          "samples": 6,
+          "percent": 0.47
+        },
+        {
+          "function": "createWriteWrap",
+          "url": "node:internal/stream_base_commons",
+          "line": 108,
+          "samples": 6,
+          "percent": 0.47
+        },
+        {
+          "function": "_write",
+          "url": "node:internal/streams/writable",
+          "line": 451,
+          "samples": 5,
+          "percent": 0.4
+        },
+        {
+          "function": "",
+          "url": "benchmarks/server.mjs",
+          "line": 1,
+          "samples": 4,
+          "percent": 0.32
+        },
+        {
+          "function": "processImmediate",
+          "url": "node:internal/timers",
+          "line": 456,
+          "samples": 4,
+          "percent": 0.32
+        },
+        {
+          "function": "clearBuffer",
+          "url": "node:internal/streams/writable",
+          "line": 742,
+          "samples": 4,
+          "percent": 0.32
+        },
+        {
+          "function": "runNextTicks",
+          "url": "node:internal/process/task_queues",
+          "line": 62,
+          "samples": 4,
+          "percent": 0.32
+        },
+        {
+          "function": "compileForInternalLoader",
+          "url": "node:internal/bootstrap/realm",
+          "line": 383,
+          "samples": 3,
+          "percent": 0.24
+        }
+      ]
+    }
+  ]
+}
