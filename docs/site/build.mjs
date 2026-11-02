@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir, copyFile, rm, cp } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
+import { benchmarkArtifacts } from './benchmarks.mjs';
 import { pages, escape } from './content.mjs';
 import { icon, githubMark, robotMark } from './icons.mjs';
 
@@ -14,7 +15,9 @@ const declarations = await Promise.all(['index', 'server', 'client', 'parser'].m
 const documents = pages({ types: declarations.filter(item => item.name !== 'index').map(item => item.text).join('\n\n') });
 await rm(output, { recursive: true, force: true });
 await mkdir(join(output, 'types'), { recursive: true });
+await mkdir(join(output, 'benchmark-results'), { recursive: true });
 await Promise.all([
+  ...benchmarkArtifacts.map(name => copyFile(join(root, 'benchmarks/results', name), join(output, 'benchmark-results', name))),
   ...['styles.css', 'app.js'].map(name => copyFile(join(root, 'docs/site', name), join(output, name))),
   cp(join(root, 'docs/site/assets'), join(output, 'assets'), { recursive: true }),
   copyFile(join(root, 'assets/icon.png'), join(output, 'icon.png')),

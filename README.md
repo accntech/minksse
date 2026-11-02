@@ -257,6 +257,25 @@ Tests cover framing, parser boundaries, connection lifecycle, cleanup, byte budg
 
 For HTTP comparisons against native SSE and other packages, follow the [comparison benchmark instructions](benchmarks/README.md). The [latest pure Web API comparison](benchmarks/README.md#tuned-web-api-producer-november-2-2026) covers all six projects across ASCII, 1 KiB, Unicode, and mixed-newline delivery. Matched before/after controls measured 14.5% higher median Unicode throughput and 41.0% higher multiline throughput. An explicit 64 KiB coalescing target improved the 1 KiB workload by 56.4% in a separate configuration sweep; the library default remains 0. Native Node remains faster in these measurements. Earlier reports involving the removed Node adapter and private hooks are historical.
 
+## Benchmarks
+
+Median validated **events per second**, November 2, 2026, Node v24.12.0 on Apple M4 Pro (macOS arm64). The producer remains pure Web APIs.
+
+| Project | ASCII, 1 client | ASCII, 16 clients | 1 KiB, 16 clients | Unicode, 16 clients | Mixed CR/LF, 16 clients |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Native Node HTTP | 607,606 | 1,873,650 | 786,661 | 1,396,654 | 1,531,046 |
+| MinkSSE | 564,248 | 1,661,741 | 761,475 | 1,245,703 | 1,308,942 |
+| Better SSE | 508,343 | 1,313,566 | 546,618 | 961,753 | Failed† |
+| Fastify SSE | 401,918 | 760,532 | 491,757 | 621,791 | Failed† |
+| Hono | 231,218 | 341,875 | 273,532 | 322,399 | 329,728 |
+| sveltekit-sse | 236,516 | 340,643 | 274,399 | 312,845 | Failed† |
+
+MinkSSE uses **64 KiB coalescing for 1 KiB events and 16 KiB elsewhere**; the library default is **0 (off)**. Sixteen-client cases use four loader workers, batches of 16, and six or seven measured repeats. MinkSSE reached 96.8% of native median throughput for 1 KiB events; native remains faster. These finite loopback HTTP producer measurements include independent client validation and differing framework integrations. They do not measure client-wrapper overhead or establish production capacity.
+
+† Failures concern the specific raw mixed-newline JSON configuration; compact JSON workloads passed. Failed configurations are excluded from that column’s successful run and are not scored as zero.
+
+Read the [site benchmark guide](docs/site/README.md#benchmark-results) for methodology, tuning, and downloadable reports, or the [repository benchmark documentation](benchmarks/README.md#tuned-web-api-producer-november-2-2026) for confidence intervals, raw samples, and reproduction commands.
+
 ## License
 
 MinkSSE is [MIT licensed](LICENSE).
