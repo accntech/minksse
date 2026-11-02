@@ -5,7 +5,7 @@
 [![npm version](https://img.shields.io/npm/v/minksse?style=plastic&color=orange)](https://www.npmjs.com/package/minksse)
 [![npm monthly downloads](https://img.shields.io/npm/dm/minksse?style=plastic&label=downloads&color=brightgreen)](https://www.npmjs.com/package/minksse)
 [![Runtime dependencies: 0](https://img.shields.io/badge/runtime_dependencies-0-217346?style=plastic)](#install)
-[![Documentation](https://img.shields.io/badge/docs-MinkSSE-217346?style=plastic)](docs/site/README.md)
+[![Documentation](https://img.shields.io/badge/docs-MinkSSE-217346?style=plastic)](https://accntech.github.io/minksse/)
 [![GitHub stars](https://img.shields.io/github/stars/accntech/minksse?style=social&label=Stars)](https://github.com/accntech/minksse/stargazers)
 
 Server-Sent Events for JavaScript applications: produce a streaming Web `Response`, subscribe to named events through native `EventSource`, or parse SSE text directly. Zero runtime dependencies, native JavaScript ESM, and TypeScript declarations generated from JSDoc.
@@ -249,7 +249,7 @@ bun run test:docs      # Documentation checks
 bun run bench          # Parser and producer timing benchmarks
 ```
 
-Read the [documentation site instructions](https://github.com/accntech/minksse/blob/main/docs/site/README.md) for preview details. The site includes framework lifecycle examples and the generated API declarations.
+Read the [documentation](https://accntech.github.io/minksse/) for API references, framework lifecycle examples, and the [benchmark guide](https://accntech.github.io/minksse/benchmarks/). See the [site instructions](docs/site/README.md) to build and preview the documentation locally.
 
 Source and executable tests are JavaScript. TypeScript is a development tool for checking JSDoc and generating declarations; `tests/types-consumer.js` verifies the types exposed to consumers. No TypeScript loader is needed at runtime.
 
@@ -274,7 +274,7 @@ MinkSSE uses **64 KiB coalescing for 1 KiB events and 16 KiB elsewhere**; the li
 
 † Failures concern the specific raw mixed-newline JSON configuration; compact JSON workloads passed. Failed configurations are excluded from that column’s successful run and are not scored as zero.
 
-Read the [site benchmark guide](docs/site/README.md#benchmark-results) for methodology, tuning, and downloadable reports, or the [repository benchmark documentation](benchmarks/README.md#tuned-web-api-producer-november-2-2026) for confidence intervals, raw samples, and reproduction commands.
+Read the [site benchmark guide](https://accntech.github.io/minksse/benchmarks/) for methodology, tuning, and downloadable reports, or the [repository benchmark documentation](benchmarks/README.md#tuned-web-api-producer-november-2-2026) for confidence intervals, raw samples, and reproduction commands.
 
 ## License
 
